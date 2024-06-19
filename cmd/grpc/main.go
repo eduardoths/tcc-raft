@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/eduardoths/tcc-raft/raft"
+	"github.com/eduardoths/tcc-raft/server"
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		server := raft.CreateServer(
+		server := server.CreateServer(
 			raft.MakeRaft("A", nodes),
 		)
 		server.Start(":8080")
@@ -26,7 +27,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		server := raft.CreateServer(
+		server := server.CreateServer(
 			raft.MakeRaft("B", nodes),
 		)
 		server.Start(":8081")
@@ -35,7 +36,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		server := raft.CreateServer(
+		server := server.CreateServer(
 			raft.MakeRaft("C", nodes),
 		)
 		server.Start(":8082")

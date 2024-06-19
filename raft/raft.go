@@ -30,6 +30,7 @@ type Raft struct {
 	// channels
 	heartbeatC chan bool
 	toLeaderC  chan bool
+	stop       chan struct{}
 
 	proto.UnimplementedRaftServer
 }
@@ -48,50 +49,66 @@ func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
 	return r
 }
 
-func (r *Raft) start() {
+func (r *Raft) Start() {
 	r.state = Follower
 	r.currentTerm = 0
 	r.votedFor = ""
 	r.heartbeatC = make(chan bool)
 	r.toLeaderC = make(chan bool)
+	r.stop = make(chan struct{})
 
 	go func() {
 		for {
-			switch r.state {
-			case Follower:
-				select {
-				case <-r.heartbeatC:
-					r.logger.Debug("Received heartbeat")
-				case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
-					r.logger.Debug("Timed out")
-					r.state = Candidate
-				}
-			case Candidate:
-				r.logger.Debug("Starting election")
-				r.currentTerm += 1
-				r.votedFor = r.me
-				r.voteCount = 1
-				go r.broadcastRequestVote()
-
-				select {
-				case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
-					r.state = Follower
-				case <-r.toLeaderC:
-					r.state = Leader
-					r.nextIndex = make(map[ID]int, len(r.nodes))
-					r.matchIndex = make(map[ID]int, len(r.nodes))
-					for i := range r.nodes {
-						r.nextIndex[i] = 1
-						r.matchIndex[i] = 0
-					}
-				}
-			case Leader:
-				r.logger.Debug("Sending heartbeat")
-				r.broadcastHeartbeat()
-				time.Sleep(50 * time.Millisecond)
+			select {
+			case <-r.stop:
+				r.logger.Info("Stopping raft")
+				return
+			default:
+				r.mainLoop()
 			}
+
 		}
 	}()
+}
+
+func (r *Raft) Stop() {
+	r.stop <- struct{}{}
+}
+
+func (r *Raft) mainLoop() {
+	switch r.state {
+	case Follower:
+		select {
+		case <-r.heartbeatC:
+			r.logger.Debug("Received heartbeat")
+		case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
+			r.logger.Debug("Timed out")
+			r.state = Candidate
+		}
+	case Candidate:
+		r.logger.Debug("Starting election")
+		r.currentTerm += 1
+		r.votedFor = r.me
+		r.voteCount = 1
+		go r.broadcastRequestVote()
+
+		select {
+		case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
+			r.state = Follower
+		case <-r.toLeaderC:
+			r.state = Leader
+			r.nextIndex = make(map[ID]int, len(r.nodes))
+			r.matchIndex = make(map[ID]int, len(r.nodes))
+			for i := range r.nodes {
+				r.nextIndex[i] = 1
+				r.matchIndex[i] = 0
+			}
+		}
+	case Leader:
+		r.logger.Debug("Sending heartbeat")
+		r.broadcastHeartbeat()
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 func (r *Raft) getLastIndex() int {
