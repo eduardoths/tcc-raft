@@ -6,6 +6,7 @@ import (
 
 	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/eduardoths/tcc-raft/proto"
+	"github.com/eduardoths/tcc-raft/structs"
 )
 
 type ID = string
@@ -21,7 +22,7 @@ type Raft struct {
 	votedFor    ID
 	voteCount   int
 
-	log         []LogEntry
+	logEntry    []structs.LogEntry
 	commitIndex int
 	lastApplied int
 	nextIndex   map[ID]int
@@ -112,9 +113,9 @@ func (r *Raft) mainLoop() {
 }
 
 func (r *Raft) getLastIndex() int {
-	logLength := len(r.log)
+	logLength := len(r.logEntry)
 	if logLength == 0 {
 		return 0
 	}
-	return r.log[logLength-1].Index
+	return r.logEntry[logLength-1].Index
 }

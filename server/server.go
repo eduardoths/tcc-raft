@@ -8,6 +8,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/eduardoths/tcc-raft/dto"
 	"github.com/eduardoths/tcc-raft/pkg/logger"
 	pb "github.com/eduardoths/tcc-raft/proto"
 	"github.com/eduardoths/tcc-raft/raft"
@@ -61,7 +62,7 @@ func (s *Server) AppendEntries(ctx context.Context, args *pb.AppendEntriesArgs) 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.raft.AppendEntries(raft.AppendEntriesArgs{})
+	_, err := s.raft.AppendEntries(dto.AppendEntriesArgs{})
 
 	return nil, err
 }
@@ -70,7 +71,7 @@ func (s *Server) Heartbeat(ctx context.Context, args *pb.HeartbeatArgs) (*pb.Hea
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	reply, err := s.raft.Heartbeat(ctx, raft.HeartbeatArgsFromProto(args))
+	reply, err := s.raft.Heartbeat(ctx, dto.HeartbeatArgsFromProto(args))
 	if err != nil {
 		return &pb.HeartbeatReply{
 			Success:   false,
@@ -85,7 +86,7 @@ func (s *Server) RequestVote(ctx context.Context, args *pb.RequestVoteArgs) (*pb
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	reply, err := s.raft.RequestVote(ctx, raft.VoteArgsFromProto(args))
+	reply, err := s.raft.RequestVote(ctx, dto.VoteArgsFromProto(args))
 	if err != nil {
 		reply.Term = -1
 		reply.VoteGranted = false

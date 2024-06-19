@@ -1,4 +1,4 @@
-package raft
+package structs
 
 type LogEntry struct {
 	Term    int

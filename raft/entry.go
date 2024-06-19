@@ -1,22 +1,7 @@
 package raft
 
-type AppendEntriesArgs struct {
-	Command LogCommand
+import "github.com/eduardoths/tcc-raft/dto"
+
+func (r *Raft) AppendEntries(args dto.AppendEntriesArgs) (dto.AppendEntriesReply, error) {
+	return dto.AppendEntriesReply{}, nil
 }
-
-type AppendEntriesReply struct {
-	Index    int
-	Commited bool
-}
-
-func (r *Raft) AppendEntries(args AppendEntriesArgs) (AppendEntriesReply, error) {
-	return AppendEntriesReply{}, nil
-}
-
-type CommitEntryArgs struct{}
-
-type CommitEntryReply struct{}
-
-type ReceiveEntryArgs struct{}
-
-type ReceiveEntryReply struct{}

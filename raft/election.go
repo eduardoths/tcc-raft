@@ -3,52 +3,15 @@ package raft
 import (
 	"context"
 
+	"github.com/eduardoths/tcc-raft/dto"
 	pb "github.com/eduardoths/tcc-raft/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type VoteArgs struct {
-	Term        int
-	CandidateID ID
-}
-
-func (va VoteArgs) ToProto() *pb.RequestVoteArgs {
-	return &pb.RequestVoteArgs{
-		Term:        int32(va.Term),
-		CandidateId: va.CandidateID,
-	}
-}
-
-func VoteArgsFromProto(proto *pb.RequestVoteArgs) VoteArgs {
-	return VoteArgs{
-		CandidateID: proto.GetCandidateId(),
-		Term:        int(proto.GetTerm()),
-	}
-}
-
-type VoteReply struct {
-	Term        int
-	VoteGranted bool
-}
-
-func (vr VoteReply) ToProto() *pb.RequestVoteReply {
-	return &pb.RequestVoteReply{
-		Term:        int32(vr.Term),
-		VoteGranted: vr.VoteGranted,
-	}
-}
-
-func VoteReplyFromProto(proto *pb.RequestVoteReply) VoteReply {
-	return VoteReply{
-		Term:        int(proto.GetTerm()),
-		VoteGranted: proto.GetVoteGranted(),
-	}
-}
-
-func (r *Raft) RequestVote(ctx context.Context, args VoteArgs) (VoteReply, error) {
+func (r *Raft) RequestVote(ctx context.Context, args dto.VoteArgs) (dto.VoteReply, error) {
 	r.logger.Debug("Received vote request from server %s", args.CandidateID)
-	reply := VoteReply{}
+	reply := dto.VoteReply{}
 	if args.Term < r.currentTerm {
 		reply.Term = r.currentTerm
 		reply.VoteGranted = false
@@ -65,7 +28,7 @@ func (r *Raft) RequestVote(ctx context.Context, args VoteArgs) (VoteReply, error
 }
 
 func (r *Raft) broadcastRequestVote() {
-	args := VoteArgs{
+	args := dto.VoteArgs{
 		Term:        r.currentTerm,
 		CandidateID: r.me,
 	}
@@ -77,8 +40,8 @@ func (r *Raft) broadcastRequestVote() {
 	}
 }
 
-func (r *Raft) sendRequestVote(serverID ID, args VoteArgs) {
-	var reply VoteReply
+func (r *Raft) sendRequestVote(serverID ID, args dto.VoteArgs) {
+	var reply dto.VoteReply
 	if serverID != r.me {
 		r.logger.Debug("Sending vote request to %s", serverID)
 		var err error
@@ -109,19 +72,19 @@ func (r *Raft) sendRequestVote(serverID ID, args VoteArgs) {
 
 }
 
-func (r *Raft) doRequestVote(serverID ID, args VoteArgs) (VoteReply, error) {
+func (r *Raft) doRequestVote(serverID ID, args dto.VoteArgs) (dto.VoteReply, error) {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 	conn, err := grpc.NewClient(r.nodes[serverID].Address, opts...)
 	if err != nil {
-		return VoteReply{}, err
+		return dto.VoteReply{}, err
 	}
 	defer conn.Close()
 	client := pb.NewRaftClient(conn)
 	serverReply, err := client.RequestVote(context.Background(), args.ToProto())
 	if err != nil {
-		return VoteReply{}, err
+		return dto.VoteReply{}, err
 	}
-	return VoteReplyFromProto(serverReply), nil
+	return dto.VoteReplyFromProto(serverReply), nil
 }
