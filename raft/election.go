@@ -2,10 +2,10 @@ package raft
 
 import (
 	"context"
-	"fmt"
 
 	pb "github.com/eduardoths/tcc-raft/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type VoteArgs struct {
@@ -47,6 +47,7 @@ func VoteReplyFromProto(proto *pb.RequestVoteReply) VoteReply {
 }
 
 func (r *Raft) RequestVote(ctx context.Context, args VoteArgs) (VoteReply, error) {
+	r.logger.Debug("Received vote request from server %s", args.CandidateID)
 	reply := VoteReply{}
 	if args.Term < r.currentTerm {
 		reply.Term = r.currentTerm
@@ -79,25 +80,27 @@ func (r *Raft) broadcastRequestVote() {
 func (r *Raft) sendRequestVote(serverID ID, args VoteArgs) {
 	var reply VoteReply
 	if serverID != r.me {
-		fmt.Printf("Server %s (candidate) sending request to %s\n", r.me, serverID)
+		r.logger.Debug("Sending vote request to %s", serverID)
 		var err error
 		reply, err = r.doRequestVote(serverID, args)
-		fmt.Printf("Server %s (candidate) got %t from %s\n", r.me, reply.VoteGranted, serverID)
 		if err != nil {
+			r.logger.Error(err, "failed to send request to server")
 			reply.VoteGranted = false
 			reply.Term = -1
 		}
-	}
 
-	if reply.Term > r.currentTerm {
-		r.currentTerm = reply.Term
-		r.state = Follower
-		r.votedFor = ""
-		return
-	}
+		r.logger.Debug("Received vote %t from server %s", reply.VoteGranted, serverID)
 
-	if reply.VoteGranted {
-		r.voteCount += 1
+		if reply.Term > r.currentTerm {
+			r.currentTerm = reply.Term
+			r.state = Follower
+			r.votedFor = ""
+			return
+		}
+
+		if reply.VoteGranted {
+			r.voteCount += 1
+		}
 	}
 
 	if r.voteCount >= len(r.nodes)/2+1 {
@@ -107,7 +110,9 @@ func (r *Raft) sendRequestVote(serverID ID, args VoteArgs) {
 }
 
 func (r *Raft) doRequestVote(serverID ID, args VoteArgs) (VoteReply, error) {
-	opts := []grpc.DialOption{}
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
 	conn, err := grpc.NewClient(r.nodes[serverID].Address, opts...)
 	if err != nil {
 		return VoteReply{}, err

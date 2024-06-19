@@ -5,6 +5,7 @@ import (
 
 	pb "github.com/eduardoths/tcc-raft/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type HeartbeatArgs struct {
@@ -84,7 +85,6 @@ func (hr HeartbeatReply) ToProto() *pb.HeartbeatReply {
 	}
 }
 
-// Heartbeat RPC method
 func (r *Raft) Heartbeat(ctx context.Context, args HeartbeatArgs) (HeartbeatReply, error) {
 	if args.Term < r.currentTerm {
 		return HeartbeatReply{false, r.currentTerm, 0}, nil
@@ -160,7 +160,9 @@ func (r *Raft) sendHeartbeat(serverID ID, args HeartbeatArgs) {
 }
 
 func (r Raft) doHeartbeat(serverID ID, args HeartbeatArgs) (HeartbeatReply, error) {
-	opts := []grpc.DialOption{}
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
 	conn, err := grpc.NewClient(r.nodes[serverID].Address, opts...)
 	if err != nil {
 		return HeartbeatReply{}, err

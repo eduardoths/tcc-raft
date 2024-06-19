@@ -22,8 +22,8 @@ type Server struct {
 	pb.UnimplementedRaftServer
 }
 
-func CreateServer(raft *Raft) Server {
-	return Server{
+func CreateServer(raft *Raft) *Server {
+	return &Server{
 		mu:   sync.Mutex{},
 		raft: raft,
 	}
@@ -36,8 +36,8 @@ func (s *Server) Start(port string) {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s.grpc = grpc.NewServer()
-	pb.RegisterRaftServer(s.grpc, &Server{})
-	log.Printf("server listening at %v", lis.Addr())
+	pb.RegisterRaftServer(s.grpc, s)
+	s.raft.logger.Info("Listening at %v", lis.Addr())
 
 	go func() {
 		if err := s.grpc.Serve(lis); err != nil {
@@ -90,5 +90,4 @@ func (s *Server) RequestVote(ctx context.Context, args *pb.RequestVoteArgs) (*pb
 	}
 
 	return reply.ToProto(), nil
-
 }

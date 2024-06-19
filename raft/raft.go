@@ -1,17 +1,18 @@
 package raft
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
+	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/eduardoths/tcc-raft/proto"
 )
 
 type ID = string
 
 type Raft struct {
-	me ID
+	logger logger.Logger
+	me     ID
 
 	nodes map[ID]*Node
 
@@ -34,10 +35,17 @@ type Raft struct {
 }
 
 func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
-	return &Raft{
+	r := &Raft{
 		me:    id,
 		nodes: nodes,
 	}
+	r.logger = logger.MakeLogger(
+		"server", id,
+		"term", &r.currentTerm,
+		"state", &r.state,
+	)
+
+	return r
 }
 
 func (r *Raft) start() {
@@ -53,13 +61,13 @@ func (r *Raft) start() {
 			case Follower:
 				select {
 				case <-r.heartbeatC:
-					fmt.Printf("Server %s (follower) received hearbeat\n", r.me)
+					r.logger.Debug("Received heartbeat")
 				case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
-					fmt.Printf("Server  %s (follower) timed out\n", r.me)
+					r.logger.Debug("Timed out")
 					r.state = Candidate
 				}
 			case Candidate:
-				fmt.Printf("Server %s (candidate) starting election\n", r.me)
+				r.logger.Debug("Starting election")
 				r.currentTerm += 1
 				r.votedFor = r.me
 				r.voteCount = 1
@@ -78,7 +86,7 @@ func (r *Raft) start() {
 					}
 				}
 			case Leader:
-				fmt.Printf("Server  %s (leader) sending heartbeat\n", r.me)
+				r.logger.Debug("Sending heartbeat")
 				r.broadcastHeartbeat()
 				time.Sleep(50 * time.Millisecond)
 			}

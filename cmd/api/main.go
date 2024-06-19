@@ -10,7 +10,7 @@ func main() {
 	nodes := make(map[raft.ID]*raft.Node)
 	nodes["A"] = raft.NewNode("[::]:8080")
 	nodes["B"] = raft.NewNode("[::]:8081")
-	// nodes["C"] = raft.NewNode("[::]:8082")
+	nodes["C"] = raft.NewNode("[::]:8082")
 
 	var wg sync.WaitGroup
 
@@ -32,14 +32,14 @@ func main() {
 		server.Start(":8081")
 	}()
 
-	// wg.Add(1)
-	// go func() {
-	//	defer wg.Done()
-	// 	server := raft.CreateServer(
-	// 		raft.MakeRaft("C", nodes),
-	// 	)
-	// 	server.Start(":8082")
-	// }()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		server := raft.CreateServer(
+			raft.MakeRaft("C", nodes),
+		)
+		server.Start(":8082")
+	}()
 
 	wg.Wait()
 }

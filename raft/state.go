@@ -7,3 +7,15 @@ const (
 	Candidate
 	Leader
 )
+
+func (s State) String() string {
+	if s == Follower {
+		return "Follower"
+	}
+
+	if s == Candidate {
+		return "Candidate"
+	}
+
+	return "Leader"
+}
