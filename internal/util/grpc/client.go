@@ -8,16 +8,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type Client interface {
-	Heartbeat(ctx context.Context, args *pb.HeartbeatArgs) (*pb.HeartbeatReply, error)
-	RequestVote(ctx context.Context, args *pb.RequestVoteArgs) (*pb.RequestVoteReply, error)
-	AppendEntries(ctx context.Context, args *pb.AppendEntriesArgs) (*pb.AppendEntriesReply, error)
-}
-
-func MakeClient(address string) Client {
-	return makeGrpcClient(address)
-}
-
 type grpcClient struct {
 	opts    []grpc.DialOption
 	address string
