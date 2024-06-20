@@ -7,6 +7,8 @@ option go_package = "github.com/eduardoths/tcc-raft/proto";
 service Raft {
     rpc RequestVote(RequestVoteArgs) returns (RequestVoteReply);
     rpc Heartbeat(HeartbeatArgs) returns (HeartbeatReply);
+    rpc Set(SetArgs) returns (SetReply);
+    rpc SearchLog(SearchLogArgs) returns (SearchLogReply);
 }
 
 message HeartbeatArgs {
@@ -44,4 +46,24 @@ message LogCMD {
     string operation = 1;
     string key = 2;
     bytes value = 3;
+}
+
+message SetArgs {
+    string key = 1;
+    bytes value = 2;
+}
+
+message SetReply {
+    int32 index = 1;
+    bool noted = 2;
+}
+
+message SearchLogArgs {
+    int32 index = 1;
+}
+
+message SearchLogReply {
+    LogCMD command = 1;
+    bool found = 2;
+    bool commited = 3;
 }

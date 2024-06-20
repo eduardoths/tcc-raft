@@ -89,3 +89,26 @@ func (s *Server) RequestVote(ctx context.Context, args *pb.RequestVoteArgs) (*pb
 
 	return reply.ToProto(), nil
 }
+
+func (s *Server) Set(ctx context.Context, args *pb.SetArgs) (*pb.SetReply, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	reply, err := s.raft.Set(ctx, dto.SetArgsFromProto(args))
+	if err != nil {
+		return &pb.SetReply{
+			Index: -1,
+			Noted: false,
+		}, err
+	}
+
+	return reply.ToProto(), nil
+}
+
+func (s *Server) SearchLog(ctx context.Context, args *pb.SearchLogArgs) (*pb.SearchLogReply, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	reply, err := s.raft.SearchLog(ctx, dto.SearchLogArgsFromProto(args))
+	return reply.ToProto(), err
+}
