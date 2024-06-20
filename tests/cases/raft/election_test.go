@@ -1,6 +1,8 @@
 package raft
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestRaft_Election(t *testing.T) {
 

@@ -4,9 +4,7 @@ import (
 	"context"
 
 	"github.com/eduardoths/tcc-raft/dto"
-	pb "github.com/eduardoths/tcc-raft/proto"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	grpcutil "github.com/eduardoths/tcc-raft/internal/util/grpc"
 )
 
 func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
@@ -84,19 +82,10 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 }
 
 func (r Raft) doHeartbeat(serverID ID, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-	conn, err := grpc.NewClient(r.nodes[serverID].Address, opts...)
+	response, err := grpcutil.MakeClient(r.nodes[serverID].Address).
+		Heartbeat(context.Background(), args.ToProto())
 	if err != nil {
 		return dto.HeartbeatReply{}, err
 	}
-	defer conn.Close()
-
-	client := pb.NewRaftClient(conn)
-	serverReply, err := client.Heartbeat(context.Background(), args.ToProto())
-	if err != nil {
-		return dto.HeartbeatReply{}, err
-	}
-	return dto.HeartbeatReplyFromProto(serverReply), nil
+	return dto.HeartbeatReplyFromProto(response), nil
 }

@@ -4,9 +4,7 @@ import (
 	"context"
 
 	"github.com/eduardoths/tcc-raft/dto"
-	pb "github.com/eduardoths/tcc-raft/proto"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	grpcutil "github.com/eduardoths/tcc-raft/internal/util/grpc"
 )
 
 func (r *Raft) RequestVote(ctx context.Context, args dto.VoteArgs) (dto.VoteReply, error) {
@@ -73,18 +71,10 @@ func (r *Raft) sendRequestVote(serverID ID, args dto.VoteArgs) {
 }
 
 func (r *Raft) doRequestVote(serverID ID, args dto.VoteArgs) (dto.VoteReply, error) {
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-	conn, err := grpc.NewClient(r.nodes[serverID].Address, opts...)
+	response, err := grpcutil.MakeClient(r.nodes[serverID].Address).
+		RequestVote(context.Background(), args.ToProto())
 	if err != nil {
 		return dto.VoteReply{}, err
 	}
-	defer conn.Close()
-	client := pb.NewRaftClient(conn)
-	serverReply, err := client.RequestVote(context.Background(), args.ToProto())
-	if err != nil {
-		return dto.VoteReply{}, err
-	}
-	return dto.VoteReplyFromProto(serverReply), nil
+	return dto.VoteReplyFromProto(response), nil
 }
