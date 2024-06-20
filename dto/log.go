@@ -29,6 +29,48 @@ func (sr SetReply) ToProto() *pb.SetReply {
 	}
 }
 
+type DeleteArgs struct {
+	Key string
+}
+
+func DeleteArgsFromProto(proto *pb.DeleteArgs) DeleteArgs {
+	return DeleteArgs{
+		Key: proto.GetKey(),
+	}
+}
+
+type DeleteReply struct {
+	Index int
+	Noted bool
+}
+
+func (dr DeleteReply) ToProto() *pb.DeleteReply {
+	return &pb.DeleteReply{
+		Index: int32(dr.Index),
+		Noted: dr.Noted,
+	}
+}
+
+type GetArgs struct {
+	Key string
+}
+
+func GetArgsFromProto(proto *pb.GetArgs) GetArgs {
+	return GetArgs{
+		Key: proto.GetKey(),
+	}
+}
+
+type GetReply struct {
+	Value []byte
+}
+
+func (gr GetReply) ToProto() *pb.GetReply {
+	return &pb.GetReply{
+		Value: gr.Value,
+	}
+}
+
 type SearchLogArgs struct {
 	Index int
 }

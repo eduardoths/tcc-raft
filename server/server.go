@@ -105,6 +105,32 @@ func (s *Server) Set(ctx context.Context, args *pb.SetArgs) (*pb.SetReply, error
 	return reply.ToProto(), nil
 }
 
+func (s *Server) Delete(ctx context.Context, args *pb.DeleteArgs) (*pb.DeleteReply, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	reply, err := s.raft.Delete(ctx, dto.DeleteArgsFromProto(args))
+	if err != nil {
+		return &pb.DeleteReply{
+			Index: -1,
+			Noted: false,
+		}, err
+	}
+
+	return reply.ToProto(), nil
+}
+
+func (s *Server) Get(ctx context.Context, args *pb.GetArgs) (*pb.GetReply, error) {
+	reply, err := s.raft.Get(ctx, dto.GetArgsFromProto(args))
+	if err != nil {
+		return &pb.GetReply{
+			Value: nil,
+		}, err
+	}
+
+	return reply.ToProto(), nil
+}
+
 func (s *Server) SearchLog(ctx context.Context, args *pb.SearchLogArgs) (*pb.SearchLogReply, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

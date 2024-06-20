@@ -6,27 +6,35 @@ import (
 
 	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/eduardoths/tcc-raft/proto"
+	"github.com/eduardoths/tcc-raft/storage"
 	"github.com/eduardoths/tcc-raft/structs"
 )
 
 type ID = string
 
 type Raft struct {
-	logger logger.Logger
-	me     ID
+	logger  logger.Logger
+	storage *storage.Storage
+	me      ID
 
 	nodes map[ID]*Node
+	state State
 
-	state       State
+	// election data
+	voteCount int
+
+	// persistent stage on all servers
 	currentTerm int
 	votedFor    ID
-	voteCount   int
-
 	logEntry    []structs.LogEntry
+
+	// volatile state on all servers
 	commitIndex int
 	lastApplied int
-	nextIndex   map[ID]int
-	matchIndex  map[ID]int
+
+	// volatile state on leaders
+	nextIndex  map[ID]int
+	matchIndex map[ID]int
 
 	// channels
 	heartbeatC chan bool
@@ -51,6 +59,7 @@ func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
 }
 
 func (r *Raft) Start() {
+	// r.storage = storage.NewStorage(fmt.Sprintf("db-%s", r.me))
 	r.state = Follower
 	r.currentTerm = 0
 	r.votedFor = ""

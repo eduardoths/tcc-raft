@@ -20,11 +20,12 @@ func (l *logger) Info(msg string, a ...any) {
 }
 
 func (l *logger) Error(err error, msg string, a ...any) {
+	var keysAndValues []interface{}
+	copy(keysAndValues, l.keysAndValues)
 	if err != nil {
-		l.sugar.Errorw(fmt.Sprintf(msg, a...), "err", err, l.keysAndValues)
-	} else {
-		l.sugar.Errorw(fmt.Sprintf(msg, a...), l.keysAndValues)
+		keysAndValues = append(keysAndValues, "err", err)
 	}
+	l.sugar.Errorw(fmt.Sprintf(msg, a...), keysAndValues...)
 }
 
 func (l *logger) Warn(msg string, a ...any) {

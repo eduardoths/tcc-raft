@@ -8,6 +8,8 @@ service Raft {
     rpc RequestVote(RequestVoteArgs) returns (RequestVoteReply);
     rpc Heartbeat(HeartbeatArgs) returns (HeartbeatReply);
     rpc Set(SetArgs) returns (SetReply);
+    rpc Delete(DeleteArgs) returns (DeleteReply);
+    rpc Get(GetArgs) returns (GetReply);
     rpc SearchLog(SearchLogArgs) returns (SearchLogReply);
 }
 
@@ -56,6 +58,23 @@ message SetArgs {
 message SetReply {
     int32 index = 1;
     bool noted = 2;
+}
+
+message DeleteArgs {
+    string key = 1;
+}
+
+message DeleteReply {
+    int32 index = 1;
+    bool noted = 2;
+}
+
+message GetArgs {
+    string key = 1;
+}
+
+message GetReply {
+    bytes value = 1;
 }
 
 message SearchLogArgs {

@@ -13,10 +13,6 @@ func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.Heart
 	}
 
 	r.heartbeatC <- true
-	if len(args.Entries) == 0 {
-		return dto.HeartbeatReply{true, r.currentTerm, 0}, nil
-	}
-
 	if args.PrevLogIndex > r.getLastIndex() {
 		return dto.HeartbeatReply{
 			Success:   false,
@@ -25,8 +21,11 @@ func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.Heart
 		}, nil
 	}
 
+	r.commitIndex = args.LeaderCommit
 	r.logEntry = append(r.logEntry, args.Entries...)
-	r.commitIndex = r.getLastIndex()
+	if len(args.Entries) == 0 {
+		return dto.HeartbeatReply{true, r.currentTerm, 0}, nil
+	}
 
 	return dto.HeartbeatReply{
 		Success:   true,
@@ -72,6 +71,23 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 			r.nextIndex[serverID] = reply.NextIndex
 			r.matchIndex[serverID] = r.nextIndex[serverID] - 1
 		}
+
+		nextIdx := args.PrevLogIndex + len(args.Entries)
+
+		if (nextIdx <= r.getLastIndex()) &&
+			(r.commitIndex < nextIdx) &&
+			r.logEntry[nextIdx-1].Term == r.currentTerm {
+			count := 1
+			for k := range r.nodes {
+				if k != r.me && r.matchIndex[k] >= nextIdx {
+					count += 1
+				}
+			}
+			if count > len(r.nodes)/2 {
+				r.commitIndex = args.PrevLogIndex + len(args.Entries)
+				r.persist()
+			}
+		}
 	} else {
 		if reply.Term > r.currentTerm {
 			r.currentTerm = reply.Term
@@ -79,6 +95,10 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 			r.votedFor = ""
 		}
 	}
+}
+
+func (r *Raft) persist() {
+
 }
 
 func (r Raft) doHeartbeat(serverID ID, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
