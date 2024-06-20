@@ -44,14 +44,3 @@ func (gc grpcClient) RequestVote(ctx context.Context, args *pb.RequestVoteArgs) 
 	client := pb.NewRaftClient(conn)
 	return client.RequestVote(ctx, args)
 }
-
-func (gc grpcClient) AppendEntries(ctx context.Context, args *pb.AppendEntriesArgs) (*pb.AppendEntriesReply, error) {
-	conn, err := grpc.NewClient(gc.address, gc.opts...)
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-
-	client := pb.NewRaftClient(conn)
-	return client.AppendEntries(ctx, args)
-}

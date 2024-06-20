@@ -10,7 +10,6 @@ import (
 type Client interface {
 	Heartbeat(ctx context.Context, args *pb.HeartbeatArgs) (*pb.HeartbeatReply, error)
 	RequestVote(ctx context.Context, args *pb.RequestVoteArgs) (*pb.RequestVoteReply, error)
-	AppendEntries(ctx context.Context, args *pb.AppendEntriesArgs) (*pb.AppendEntriesReply, error)
 }
 
 type config struct {

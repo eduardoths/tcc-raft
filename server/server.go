@@ -58,15 +58,6 @@ func (s *Server) Start(port string) {
 	s.grpc.GracefulStop()
 }
 
-func (s *Server) AppendEntries(ctx context.Context, args *pb.AppendEntriesArgs) (*pb.AppendEntriesReply, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	_, err := s.raft.AppendEntries(dto.AppendEntriesArgs{})
-
-	return nil, err
-}
-
 func (s *Server) Heartbeat(ctx context.Context, args *pb.HeartbeatArgs) (*pb.HeartbeatReply, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

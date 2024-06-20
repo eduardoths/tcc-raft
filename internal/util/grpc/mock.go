@@ -7,9 +7,8 @@ import (
 )
 
 type mockController struct {
-	heartbeat     func(ctx context.Context, args *pb.HeartbeatArgs) (*pb.HeartbeatReply, error)
-	requestVote   func(ctx context.Context, args *pb.RequestVoteArgs) (*pb.RequestVoteReply, error)
-	appendEntries func(ctx context.Context, args *pb.AppendEntriesArgs) (*pb.AppendEntriesReply, error)
+	heartbeat   func(ctx context.Context, args *pb.HeartbeatArgs) (*pb.HeartbeatReply, error)
+	requestVote func(ctx context.Context, args *pb.RequestVoteArgs) (*pb.RequestVoteReply, error)
 }
 
 func (mc *mockController) SetHeartbeatResponse(reply *pb.HeartbeatReply, err error) {
@@ -22,13 +21,6 @@ func (mc *mockController) SetRequestVoteResponse(reply *pb.RequestVoteReply, err
 	mc.requestVote = func(ctx context.Context, args *pb.RequestVoteArgs) (*pb.RequestVoteReply, error) {
 		return reply, err
 	}
-}
-
-func (mc *mockController) SetAppendEntriesResponse(reply *pb.AppendEntriesReply, err error) {
-	mc.appendEntries = func(ctx context.Context, args *pb.AppendEntriesArgs) (*pb.AppendEntriesReply, error) {
-		return reply, err
-	}
-
 }
 
 var globalMock *mockController
@@ -61,8 +53,4 @@ func (gc mockClient) Heartbeat(ctx context.Context, args *pb.HeartbeatArgs) (*pb
 
 func (gc mockClient) RequestVote(ctx context.Context, args *pb.RequestVoteArgs) (*pb.RequestVoteReply, error) {
 	return gc.ctrl.requestVote(ctx, args)
-}
-
-func (gc mockClient) AppendEntries(ctx context.Context, args *pb.AppendEntriesArgs) (*pb.AppendEntriesReply, error) {
-	return gc.ctrl.appendEntries(ctx, args)
 }
