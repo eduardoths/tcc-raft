@@ -103,10 +103,6 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 	}
 }
 
-func (r *Raft) persist() {
-
-}
-
 func (r Raft) doHeartbeat(serverID ID, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
 	response, err := grpcutil.MakeClient(r.nodes[serverID].Address).
 		Heartbeat(context.Background(), args.ToProto())

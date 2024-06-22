@@ -68,6 +68,9 @@ func (r *Raft) Start() {
 	r.toLeaderC = make(chan bool)
 	r.stop = make(chan struct{})
 
+	// tries to load state from file
+	r.loadState()
+
 	go func() {
 		for {
 			select {
@@ -114,6 +117,7 @@ func (r *Raft) mainLoop() {
 				r.nextIndex[i] = 1
 				r.matchIndex[i] = 0
 			}
+			r.logger.Info("Became a leader")
 		}
 	case Leader:
 		r.logger.Debug("Sending heartbeat")

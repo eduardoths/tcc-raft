@@ -29,6 +29,7 @@ func (r *Raft) apply() error {
 		default:
 			return errors.New("failed to apply invalid log entry")
 		}
+		r.persist()
 		r.lastApplied = l.Index
 	}
 	return nil
