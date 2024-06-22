@@ -25,8 +25,8 @@ func (r *Raft) persist() {
 		VotedFor:    r.votedFor,
 		CommitIndex: r.commitIndex,
 		LastApplied: r.lastApplied,
-		NextIndex:   nil,
-		MatchIndex:  nil,
+		NextIndex:   r.nextIndex,
+		MatchIndex:  r.matchIndex,
 		LogEntry:    r.logEntry,
 	}
 
@@ -66,4 +66,5 @@ func (r *Raft) loadState() {
 	r.matchIndex = data.MatchIndex
 	r.nextIndex = data.NextIndex
 	r.logEntry = data.LogEntry
+	r.logger.Debug("finished recovering data from persistency files")
 }
