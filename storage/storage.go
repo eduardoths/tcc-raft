@@ -1,66 +1,71 @@
 package storage
 
-type Storage struct {
-	memory           map[string]StorageData
-	finishChan       chan struct{}
-	saveChan         chan StorageSaveStruct
-	getIncomingChan  chan string
-	getOutcomingChan chan StorageData
-	deleteChan       chan string
-}
+import (
+	"os"
+	"sync"
 
-type StorageData struct {
-	Message  string
-	Metadata map[string]interface{}
+	"github.com/cockroachdb/pebble"
+	"github.com/eduardoths/tcc-raft/pkg/logger"
+)
+
+type Storage struct {
+	mu  sync.Mutex
+	db  *pebble.DB
+	log logger.Logger
 }
 
 type StorageSaveStruct struct {
 	Key   string
-	Value StorageData
+	Value []byte
 }
 
-func NewStorage() *Storage {
-	s := &Storage{
-		memory:           make(map[string]StorageData),
-		finishChan:       make(chan struct{}, 1),
-		saveChan:         make(chan StorageSaveStruct, 1),
-		getIncomingChan:  make(chan string, 1),
-		getOutcomingChan: make(chan StorageData, 1),
-		deleteChan:       make(chan string, 1),
+func NewStorage(name string) *Storage {
+	l := logger.MakeLogger()
+	db, err := pebble.Open("data/"+name, &pebble.Options{})
+	if err != nil {
+		l.Error(err, "failed to open storage")
+		os.Exit(1)
 	}
-	go s.start()
+	s := &Storage{
+		db:  db,
+		log: l,
+	}
 	return s
 }
 
-func (s *Storage) start() {
-	for {
-		select {
-		case <-s.finishChan:
-			return
-		case toSave := <-s.saveChan:
-			s.memory[toSave.Key] = toSave.Value
-		case key := <-s.getIncomingChan:
-			s.getOutcomingChan <- s.memory[key]
-		case key := <-s.deleteChan:
-			delete(s.memory, key)
-		default:
-		}
+func (s *Storage) Save(data StorageSaveStruct) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.db.Set([]byte(data.Key), data.Value, pebble.Sync)
+}
+
+func (s *Storage) Get(key string) ([]byte, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data, closer, err := s.db.Get([]byte(key))
+	if err != nil {
+		return nil, err
 	}
+
+	defer closer.Close()
+	return data, err
 }
 
-func (s *Storage) Save(sss StorageSaveStruct) {
-	s.saveChan <- sss
-}
+func (s *Storage) Delete(key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-func (s *Storage) Get(key string) StorageData {
-	s.getIncomingChan <- key
-	return <-s.getOutcomingChan
-}
-
-func (s *Storage) Delete(key string) {
-	s.deleteChan <- key
+	return s.db.Delete([]byte(key), pebble.Sync)
 }
 
 func (s *Storage) Shutdown() {
-	s.finishChan <- struct{}{}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.db.Close(); err != nil {
+		s.log.Error(err, "failed to shutdown storage")
+		os.Exit(1)
+	}
 }

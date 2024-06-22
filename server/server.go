@@ -23,6 +23,7 @@ type Server struct {
 	grpc *grpc.Server
 
 	pb.UnimplementedRaftServer
+	pb.UnimplementedDatabaseServer
 }
 
 func CreateServer(raft *raft.Raft) *Server {
@@ -42,6 +43,7 @@ func (s *Server) Start(port string) {
 	}
 	s.grpc = grpc.NewServer()
 	pb.RegisterRaftServer(s.grpc, s)
+	pb.RegisterDatabaseServer(s.grpc, s)
 	s.logger.Info("Listening at %v", lis.Addr())
 
 	go func() {

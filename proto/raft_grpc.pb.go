@@ -19,12 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	Raft_RequestVote_FullMethodName = "/raft.Raft/RequestVote"
-	Raft_Heartbeat_FullMethodName   = "/raft.Raft/Heartbeat"
-	Raft_Set_FullMethodName         = "/raft.Raft/Set"
-	Raft_Delete_FullMethodName      = "/raft.Raft/Delete"
-	Raft_Get_FullMethodName         = "/raft.Raft/Get"
-	Raft_SearchLog_FullMethodName   = "/raft.Raft/SearchLog"
+	Raft_RequestVote_FullMethodName = "/proto.Raft/RequestVote"
+	Raft_Heartbeat_FullMethodName   = "/proto.Raft/Heartbeat"
+	Raft_SearchLog_FullMethodName   = "/proto.Raft/SearchLog"
 )
 
 // RaftClient is the client API for Raft service.
@@ -33,9 +30,6 @@ const (
 type RaftClient interface {
 	RequestVote(ctx context.Context, in *RequestVoteArgs, opts ...grpc.CallOption) (*RequestVoteReply, error)
 	Heartbeat(ctx context.Context, in *HeartbeatArgs, opts ...grpc.CallOption) (*HeartbeatReply, error)
-	Set(ctx context.Context, in *SetArgs, opts ...grpc.CallOption) (*SetReply, error)
-	Delete(ctx context.Context, in *DeleteArgs, opts ...grpc.CallOption) (*DeleteReply, error)
-	Get(ctx context.Context, in *GetArgs, opts ...grpc.CallOption) (*GetReply, error)
 	SearchLog(ctx context.Context, in *SearchLogArgs, opts ...grpc.CallOption) (*SearchLogReply, error)
 }
 
@@ -67,36 +61,6 @@ func (c *raftClient) Heartbeat(ctx context.Context, in *HeartbeatArgs, opts ...g
 	return out, nil
 }
 
-func (c *raftClient) Set(ctx context.Context, in *SetArgs, opts ...grpc.CallOption) (*SetReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SetReply)
-	err := c.cc.Invoke(ctx, Raft_Set_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *raftClient) Delete(ctx context.Context, in *DeleteArgs, opts ...grpc.CallOption) (*DeleteReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteReply)
-	err := c.cc.Invoke(ctx, Raft_Delete_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *raftClient) Get(ctx context.Context, in *GetArgs, opts ...grpc.CallOption) (*GetReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetReply)
-	err := c.cc.Invoke(ctx, Raft_Get_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *raftClient) SearchLog(ctx context.Context, in *SearchLogArgs, opts ...grpc.CallOption) (*SearchLogReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SearchLogReply)
@@ -113,9 +77,6 @@ func (c *raftClient) SearchLog(ctx context.Context, in *SearchLogArgs, opts ...g
 type RaftServer interface {
 	RequestVote(context.Context, *RequestVoteArgs) (*RequestVoteReply, error)
 	Heartbeat(context.Context, *HeartbeatArgs) (*HeartbeatReply, error)
-	Set(context.Context, *SetArgs) (*SetReply, error)
-	Delete(context.Context, *DeleteArgs) (*DeleteReply, error)
-	Get(context.Context, *GetArgs) (*GetReply, error)
 	SearchLog(context.Context, *SearchLogArgs) (*SearchLogReply, error)
 	mustEmbedUnimplementedRaftServer()
 }
@@ -129,15 +90,6 @@ func (UnimplementedRaftServer) RequestVote(context.Context, *RequestVoteArgs) (*
 }
 func (UnimplementedRaftServer) Heartbeat(context.Context, *HeartbeatArgs) (*HeartbeatReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Heartbeat not implemented")
-}
-func (UnimplementedRaftServer) Set(context.Context, *SetArgs) (*SetReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
-}
-func (UnimplementedRaftServer) Delete(context.Context, *DeleteArgs) (*DeleteReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
-}
-func (UnimplementedRaftServer) Get(context.Context, *GetArgs) (*GetReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
 func (UnimplementedRaftServer) SearchLog(context.Context, *SearchLogArgs) (*SearchLogReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchLog not implemented")
@@ -191,60 +143,6 @@ func _Raft_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Raft_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetArgs)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RaftServer).Set(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Raft_Set_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServer).Set(ctx, req.(*SetArgs))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Raft_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteArgs)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RaftServer).Delete(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Raft_Delete_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServer).Delete(ctx, req.(*DeleteArgs))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Raft_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetArgs)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RaftServer).Get(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Raft_Get_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServer).Get(ctx, req.(*GetArgs))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Raft_SearchLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SearchLogArgs)
 	if err := dec(in); err != nil {
@@ -267,7 +165,7 @@ func _Raft_SearchLog_Handler(srv interface{}, ctx context.Context, dec func(inte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Raft_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "raft.Raft",
+	ServiceName: "proto.Raft",
 	HandlerType: (*RaftServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -277,18 +175,6 @@ var Raft_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Heartbeat",
 			Handler:    _Raft_Heartbeat_Handler,
-		},
-		{
-			MethodName: "Set",
-			Handler:    _Raft_Set_Handler,
-		},
-		{
-			MethodName: "Delete",
-			Handler:    _Raft_Delete_Handler,
-		},
-		{
-			MethodName: "Get",
-			Handler:    _Raft_Get_Handler,
 		},
 		{
 			MethodName: "SearchLog",

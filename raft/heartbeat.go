@@ -9,7 +9,7 @@ import (
 
 func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
 	if args.Term < r.currentTerm {
-		return dto.HeartbeatReply{false, r.currentTerm, 0}, nil
+		return dto.HeartbeatReply{Success: false, Term: r.currentTerm, NextIndex: 0}, nil
 	}
 
 	r.heartbeatC <- true
@@ -24,7 +24,12 @@ func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.Heart
 	r.commitIndex = args.LeaderCommit
 	r.logEntry = append(r.logEntry, args.Entries...)
 	if len(args.Entries) == 0 {
-		return dto.HeartbeatReply{true, r.currentTerm, 0}, nil
+		return dto.HeartbeatReply{Success: true, Term: r.currentTerm, NextIndex: 0}, nil
+	}
+
+	if err := r.apply(); err != nil {
+		r.logger.Error(err, "shutting down server instance")
+		panic(err)
 	}
 
 	return dto.HeartbeatReply{
@@ -89,6 +94,7 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 			}
 		}
 	} else {
+		// TODO solve conflicts
 		if reply.Term > r.currentTerm {
 			r.currentTerm = reply.Term
 			r.state = Follower

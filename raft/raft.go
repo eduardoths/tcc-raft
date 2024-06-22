@@ -1,6 +1,7 @@
 package raft
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -59,7 +60,7 @@ func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
 }
 
 func (r *Raft) Start() {
-	// r.storage = storage.NewStorage(fmt.Sprintf("db-%s", r.me))
+	r.storage = storage.NewStorage(fmt.Sprintf("db-%s", r.me))
 	r.state = Follower
 	r.currentTerm = 0
 	r.votedFor = ""

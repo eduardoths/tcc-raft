@@ -1,3 +1,6 @@
+# database files
+data/
+
 # development tools
 .cover/
 __debug_bin

@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/eduardoths/tcc-raft/proto";
+
+service Database {
+    rpc Set(SetArgs) returns (SetReply);
+    rpc Delete(DeleteArgs) returns (DeleteReply);
+    rpc Get(GetArgs) returns (GetReply);
+}
+
+message SetArgs {
+    string key = 1;
+    bytes value = 2;
+}
+
+message SetReply {
+    int32 index = 1;
+    bool noted = 2;
+}
+
+message DeleteArgs {
+    string key = 1;
+}
+
+message DeleteReply {
+    int32 index = 1;
+    bool noted = 2;
+}
+
+message GetArgs {
+    string key = 1;
+}
+
+message GetReply {
+    bytes value = 1;
+}
+
