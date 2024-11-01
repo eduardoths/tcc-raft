@@ -76,6 +76,7 @@ func (r *Raft) Start() {
 			select {
 			case <-r.stop:
 				r.logger.Info("Stopping raft")
+				r.storage.Shutdown()
 				return
 			default:
 				r.mainLoop()
