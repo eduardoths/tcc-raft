@@ -13,6 +13,13 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
+func init() {
+	permissions := os.FileMode(0755)
+	if err := os.MkdirAll("data/persistency/", permissions); err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 	file, err := os.ReadFile("raft.yaml")
 	if err != nil {
