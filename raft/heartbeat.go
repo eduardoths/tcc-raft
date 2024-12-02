@@ -103,11 +103,12 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 			}
 		}
 	} else {
-		// TODO solve conflicts
 		if reply.Term > r.currentTerm {
 			r.currentTerm = reply.Term
 			r.state = Follower
 			r.votedFor = ""
+			r.persist()
+			r.logger.Info("heartbeat term error")
 		}
 	}
 }
