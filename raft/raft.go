@@ -119,6 +119,7 @@ func (r *Raft) mainLoop() {
 				r.matchIndex[i] = 0
 			}
 			r.logger.Info("Became a leader")
+			r.persist()
 		}
 	case Leader:
 		r.logger.Debug("Sending heartbeat")

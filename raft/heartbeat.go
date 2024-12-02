@@ -95,7 +95,9 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 			}
 			if count > len(r.nodes)/2 {
 				r.commitIndex = args.PrevLogIndex + len(args.Entries)
-				r.persist()
+				if len(args.Entries) > 0 {
+					r.persist()
+				}
 				r.apply()
 			}
 		}

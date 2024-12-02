@@ -20,6 +20,7 @@ func (r *Raft) RequestVote(ctx context.Context, args dto.VoteArgs) (dto.VoteRepl
 		r.votedFor = args.CandidateID
 		reply.Term = r.currentTerm
 		reply.VoteGranted = true
+		r.persist()
 	}
 
 	return reply, nil

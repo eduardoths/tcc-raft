@@ -30,6 +30,8 @@ func (r *Raft) persist() {
 		LogEntry:    r.logEntry,
 	}
 
+	r.logger.Debug("Persisting info")
+
 	file, err := os.Create("data/persistency/" + r.me)
 	if err != nil {
 		r.logger.Error(err, "failed to create persistency file")
@@ -67,4 +69,5 @@ func (r *Raft) loadState() {
 	r.nextIndex = data.NextIndex
 	r.logEntry = data.LogEntry
 	r.logger.Debug("finished recovering data from persistency files")
+	r.logger.Info("loaded raft server")
 }
