@@ -47,7 +47,8 @@ func (r *Raft) broadcastHeartbeat() {
 		args.LeaderID = r.me
 		args.LeaderCommit = r.commitIndex
 
-		prevLogIndex := max(r.nextIndex[i]-1, 0) // prevents errors if node is new
+		prevLogIndex := max(r.getNextIndex(i)-1, 0) // prevents errors if node is new
+
 		if r.getLastIndex() > prevLogIndex {
 			args.PrevLogIndex = prevLogIndex
 			args.PrevLogTerm = r.logEntry[prevLogIndex].Term
@@ -78,8 +79,8 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 
 	if reply.Success {
 		if reply.NextIndex > 0 {
-			r.nextIndex[serverID] = reply.NextIndex
-			r.matchIndex[serverID] = r.nextIndex[serverID] - 1
+			r.setNextIndex(serverID, reply.NextIndex)
+			r.setMatchIndex(serverID, r.getNextIndex(serverID)-1)
 		}
 
 		nextIdx := args.PrevLogIndex + len(args.Entries)
@@ -89,7 +90,7 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 			r.logEntry[nextIdx-1].Term == r.currentTerm {
 			count := 1
 			for k := range r.nodes {
-				if k != r.me && r.matchIndex[k] >= nextIdx {
+				if k != r.me && r.getMatchIndex(k) >= nextIdx {
 					count += 1
 				}
 			}

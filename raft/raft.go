@@ -3,6 +3,7 @@ package raft
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/eduardoths/tcc-raft/pkg/logger"
@@ -34,8 +35,10 @@ type Raft struct {
 	lastApplied int
 
 	// volatile state on leaders
-	nextIndex  map[ID]int
-	matchIndex map[ID]int
+	nextIdxMutex  *sync.Mutex
+	nextIndex     map[ID]int
+	matchIdxMutex *sync.Mutex
+	matchIndex    map[ID]int
 
 	// channels
 	heartbeatC chan bool
@@ -45,10 +48,40 @@ type Raft struct {
 	proto.UnimplementedRaftServer
 }
 
+func (r *Raft) getNextIndex(id ID) int {
+	r.nextIdxMutex.Lock()
+	defer r.nextIdxMutex.Unlock()
+
+	return r.nextIndex[id]
+}
+
+func (r *Raft) setNextIndex(id ID, v int) {
+	r.nextIdxMutex.Lock()
+	defer r.nextIdxMutex.Unlock()
+
+	r.nextIndex[id] = v
+}
+
+func (r *Raft) getMatchIndex(id ID) int {
+	r.matchIdxMutex.Lock()
+	defer r.matchIdxMutex.Unlock()
+
+	return r.matchIndex[id]
+}
+
+func (r *Raft) setMatchIndex(id ID, v int) {
+	r.matchIdxMutex.Lock()
+	defer r.matchIdxMutex.Unlock()
+
+	r.matchIndex[id] = v
+}
+
 func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
 	r := &Raft{
-		me:    id,
-		nodes: nodes,
+		me:            id,
+		nodes:         nodes,
+		nextIdxMutex:  &sync.Mutex{},
+		matchIdxMutex: &sync.Mutex{},
 	}
 	r.logger = logger.MakeLogger(
 		"server", id,
@@ -115,8 +148,8 @@ func (r *Raft) mainLoop() {
 			r.nextIndex = make(map[ID]int, len(r.nodes))
 			r.matchIndex = make(map[ID]int, len(r.nodes))
 			for i := range r.nodes {
-				r.nextIndex[i] = 1
-				r.matchIndex[i] = 0
+				r.setNextIndex(i, 1)
+				r.setMatchIndex(i, 0)
 			}
 			r.logger.Info("Became a leader")
 			r.persist()

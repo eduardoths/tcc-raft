@@ -19,6 +19,10 @@ type PersistenceData struct {
 }
 
 func (r *Raft) persist() {
+	r.nextIdxMutex.Lock()
+	defer r.nextIdxMutex.Unlock()
+	r.matchIdxMutex.Lock()
+	defer r.matchIdxMutex.Unlock()
 	data := PersistenceData{
 		State:       r.state,
 		CurrentTerm: r.currentTerm,
