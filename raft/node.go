@@ -1,7 +1,6 @@
 package raft
 
 type Node struct {
-	Connect bool
 	Address string
 }
 
