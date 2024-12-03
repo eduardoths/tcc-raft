@@ -75,7 +75,7 @@ var (
 )
 
 func init() {
-	log = logger.MakeLogger("server", "orchestrator", "cmd", "orchestrator")
+	log = logger.MakeLogger("cmd", "orchestrator")
 	OrchestratorCmd.Flags().IntVar(&electionTimeout, "election_timeout", 0, "Election timeout in milliseconds")
 	OrchestratorCmd.Flags().IntVar(&heartbeatInterval, "heartbeat_interval", 0, "Heartbeat interval in milliseconds")
 	OrchestratorCmd.Flags().IntVar(&serverCount, "server_count", 0, "Number of servers running")

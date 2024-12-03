@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/eduardoths/tcc-raft/raft"
 	"github.com/eduardoths/tcc-raft/server"
 	"github.com/spf13/cobra"
@@ -11,6 +12,7 @@ import (
 
 var (
 	serverID          string
+	log               logger.Logger
 	port              int
 	serverCount       int
 	servers           map[string]string
@@ -25,6 +27,7 @@ var (
 )
 
 func init() {
+	log = logger.MakeLogger("cmd", "grpc")
 	// Define flags for the root command
 	GrpcCMD.Flags().StringVar(&serverID, "id", "server-1", "Unique server ID")
 	GrpcCMD.Flags().IntVar(&port, "port", 8080, "Port to run the HTTP server on")
