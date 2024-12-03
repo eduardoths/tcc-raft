@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/eduardoths/tcc-raft/proto";
+
+service Admin {
+    rpc SetNodes(SetNodesArgs) returns (Empty);
+    rpc Shutdown(Empty) returns (Empty); 
+}
+
+message SetNodesArgs {
+    map<string, Node> nodes = 1;
+}
+
+message Node {
+    string address = 1;
+}
+
+message Empty {}

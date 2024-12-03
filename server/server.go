@@ -24,6 +24,7 @@ type Server struct {
 
 	pb.UnimplementedRaftServer
 	pb.UnimplementedDatabaseServer
+	pb.UnimplementedAdminServer
 }
 
 func CreateServer(raft *raft.Raft) *Server {
@@ -139,4 +140,16 @@ func (s *Server) SearchLog(ctx context.Context, args *pb.SearchLogArgs) (*pb.Sea
 
 	reply, err := s.raft.SearchLog(ctx, dto.SearchLogArgsFromProto(args))
 	return reply.ToProto(), err
+}
+
+func (s *Server) SetNodes(ctx context.Context, args *pb.SetNodesArgs) (*pb.Empty, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	err := s.raft.SetNodes(ctx, dto.SetNodesArgsFromProto(args))
+	return &pb.Empty{}, err
+}
+
+func (s *Server) Shutdown(ctx context.Context, _ *pb.Empty) (*pb.Empty, error) {
+	return &pb.Empty{}, s.raft.Shutdown(ctx)
 }
