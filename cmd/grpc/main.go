@@ -34,7 +34,7 @@ func init() {
 	rootCmd.Flags().BoolVar(&enableK8s, "enable_k8s", false, "Enable kubernetes support")
 	rootCmd.Flags().StringToStringVar(
 		&servers,
-		"map of servers with ids",
+		"servers_map",
 		map[string]string{serverID: fmt.Sprintf("[::]:%d", port)},
 		"Map of nodes in the system",
 	)
@@ -47,9 +47,12 @@ func init() {
 
 func startServer(cmd *cobra.Command, args []string) {
 	nodes := make(map[string]*raft.Node, 1)
-	nodes[serverID] = &raft.Node{
-		Address: fmt.Sprintf("[::]:%d", port),
+	for k, v := range servers {
+		nodes[k] = &raft.Node{
+			Address: v,
+		}
 	}
+
 	server := server.CreateServer(
 		raft.MakeRaft(serverID, nodes),
 	)
