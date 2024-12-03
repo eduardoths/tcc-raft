@@ -19,8 +19,9 @@ type Raft struct {
 	storage *storage.Storage
 	me      ID
 
-	nodes map[ID]*Node
-	state State
+	nodexMutex *sync.Mutex
+	nodes      map[ID]*Node
+	state      State
 
 	// election data
 	voteCount int
@@ -76,13 +77,37 @@ func (r *Raft) setMatchIndex(id ID, v int) {
 	r.matchIndex[id] = v
 }
 
+func (r *Raft) getNodes() map[ID]*Node {
+	r.nodexMutex.Lock()
+	defer r.nodexMutex.Unlock()
+
+	var cp = make(map[ID]*Node, len(r.nodes))
+
+	for k, v := range r.nodes {
+		cp[k] = v
+	}
+
+	return cp
+}
+
+func (r *Raft) setNodes(n map[ID]*Node) {
+	r.nodexMutex.Lock()
+	defer r.nodexMutex.Unlock()
+
+	r.nodes = make(map[ID]*Node, len(n))
+	for k, v := range n {
+		r.nodes[k] = v
+	}
+}
+
 func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
 	r := &Raft{
 		me:            id,
-		nodes:         nodes,
+		nodexMutex:    &sync.Mutex{},
 		nextIdxMutex:  &sync.Mutex{},
 		matchIdxMutex: &sync.Mutex{},
 	}
+	r.setNodes(nodes)
 	r.logger = logger.MakeLogger(
 		"server", id,
 		"term", &r.currentTerm,
@@ -145,9 +170,10 @@ func (r *Raft) mainLoop() {
 			r.state = Follower
 		case <-r.toLeaderC:
 			r.state = Leader
-			r.nextIndex = make(map[ID]int, len(r.nodes))
-			r.matchIndex = make(map[ID]int, len(r.nodes))
-			for i := range r.nodes {
+			nodes := r.getNodes()
+			r.nextIndex = make(map[ID]int, len(nodes))
+			r.matchIndex = make(map[ID]int, len(nodes))
+			for i := range nodes {
 				r.setNextIndex(i, 1)
 				r.setMatchIndex(i, 0)
 			}

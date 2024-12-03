@@ -32,7 +32,7 @@ func (r *Raft) broadcastRequestVote() {
 		CandidateID: r.me,
 	}
 
-	for i := range r.nodes {
+	for i := range r.getNodes() {
 		go func(i ID) {
 			r.sendRequestVote(i, args)
 		}(i)
@@ -65,14 +65,14 @@ func (r *Raft) sendRequestVote(serverID ID, args dto.VoteArgs) {
 		}
 	}
 
-	if r.voteCount >= len(r.nodes)/2+1 {
+	if r.voteCount >= len(r.getNodes())/2+1 {
 		r.toLeaderC <- true
 	}
 
 }
 
 func (r *Raft) doRequestVote(serverID ID, args dto.VoteArgs) (dto.VoteReply, error) {
-	response, err := grpcutil.MakeClient(r.nodes[serverID].Address).
+	response, err := grpcutil.MakeClient(r.getNodes()[serverID].Address).
 		RequestVote(context.Background(), args.ToProto())
 	if err != nil {
 		return dto.VoteReply{}, err

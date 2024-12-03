@@ -40,7 +40,7 @@ func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.Heart
 }
 
 func (r *Raft) broadcastHeartbeat() {
-	for i := range r.nodes {
+	for i := range r.getNodes() {
 		var args dto.HeartbeatArgs
 
 		args.Term = r.currentTerm
@@ -89,12 +89,12 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 			(r.commitIndex < nextIdx) &&
 			r.logEntry[nextIdx-1].Term == r.currentTerm {
 			count := 1
-			for k := range r.nodes {
+			for k := range r.getNodes() {
 				if k != r.me && r.getMatchIndex(k) >= nextIdx {
 					count += 1
 				}
 			}
-			if count > len(r.nodes)/2 {
+			if count > len(r.getNodes())/2 {
 				r.commitIndex = args.PrevLogIndex + len(args.Entries)
 				if len(args.Entries) > 0 {
 					r.persist()
@@ -114,7 +114,7 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 }
 
 func (r Raft) doHeartbeat(serverID ID, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
-	response, err := grpcutil.MakeClient(r.nodes[serverID].Address).
+	response, err := grpcutil.MakeClient(r.getNodes()[serverID].Address).
 		Heartbeat(context.Background(), args.ToProto())
 	if err != nil {
 		return dto.HeartbeatReply{}, err
