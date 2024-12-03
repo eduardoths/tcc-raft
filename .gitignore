@@ -1,4 +1,8 @@
-! data/persistency/.gitkeep
+!/data/persistency/.gitkeep
+
+/bin/*
+!/bin/.gitkeep
+
 
 # database files
 data/
