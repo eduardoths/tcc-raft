@@ -1,4 +1,4 @@
-package main
+package grpc
 
 import (
 	"fmt"
@@ -17,8 +17,8 @@ var (
 	electionTimeout   int
 	heartbeatInterval int
 	enableK8s         bool
-	rootCmd           = &cobra.Command{
-		Use:   "server",
+	GrpcCMD           = &cobra.Command{
+		Use:   "grpc",
 		Short: "Start grpc server",
 		Run:   startServer,
 	}
@@ -26,13 +26,13 @@ var (
 
 func init() {
 	// Define flags for the root command
-	rootCmd.Flags().StringVar(&serverID, "id", "server-1", "Unique server ID")
-	rootCmd.Flags().IntVar(&port, "port", 8080, "Port to run the HTTP server on")
-	rootCmd.Flags().IntVar(&electionTimeout, "election_timeout", 5000, "Election timeout in milliseconds")
-	rootCmd.Flags().IntVar(&heartbeatInterval, "heartbeat_interval", 1000, "Heartbeat interval in milliseconds")
-	rootCmd.Flags().IntVar(&serverCount, "server_count", 1, "Number of servers running")
-	rootCmd.Flags().BoolVar(&enableK8s, "enable_k8s", false, "Enable kubernetes support")
-	rootCmd.Flags().StringToStringVar(
+	GrpcCMD.Flags().StringVar(&serverID, "id", "server-1", "Unique server ID")
+	GrpcCMD.Flags().IntVar(&port, "port", 8080, "Port to run the HTTP server on")
+	GrpcCMD.Flags().IntVar(&electionTimeout, "election_timeout", 5000, "Election timeout in milliseconds")
+	GrpcCMD.Flags().IntVar(&heartbeatInterval, "heartbeat_interval", 1000, "Heartbeat interval in milliseconds")
+	GrpcCMD.Flags().IntVar(&serverCount, "server_count", 1, "Number of servers running")
+	GrpcCMD.Flags().BoolVar(&enableK8s, "enable_k8s", false, "Enable kubernetes support")
+	GrpcCMD.Flags().StringToStringVar(
 		&servers,
 		"servers_map",
 		map[string]string{serverID: fmt.Sprintf("[::]:%d", port)},
@@ -61,7 +61,7 @@ func startServer(cmd *cobra.Command, args []string) {
 }
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := GrpcCMD.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

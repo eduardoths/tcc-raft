@@ -2,10 +2,13 @@ raft_cluster:
   server_count: 3
   servers:
     - id: A
+      host: "[::]"
       port: 8080
     - id: B
+      host: "[::]"
       port: 8081
     - id: C
+      host: "[::]"
       port: 8082
 
   # Additional Raft configuration
