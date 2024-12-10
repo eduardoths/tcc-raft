@@ -114,10 +114,18 @@ func (r *Raft) sendHeartbeat(serverID ID, args dto.HeartbeatArgs) {
 }
 
 func (r Raft) doHeartbeat(serverID ID, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
+	l := r.logger.With(
+		"to", serverID,
+		"leader-id", args.LeaderID,
+		"term", args.Term,
+	)
+
+	l.Debug("Broadcasting heartbeat to server")
 	response, err := grpcutil.MakeClient(r.getNodes()[serverID].Address).
 		Heartbeat(context.Background(), args.ToProto())
 	if err != nil {
 		return dto.HeartbeatReply{}, err
 	}
+	l.With("success", response.GetSuccess()).Debug("Received response")
 	return dto.HeartbeatReplyFromProto(response), nil
 }

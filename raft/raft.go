@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/eduardoths/tcc-raft/internal/config"
 	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/eduardoths/tcc-raft/proto"
 	"github.com/eduardoths/tcc-raft/storage"
@@ -40,6 +41,10 @@ type Raft struct {
 	nextIndex     map[ID]int
 	matchIdxMutex *sync.Mutex
 	matchIndex    map[ID]int
+
+	//config
+	heartbeatInterval int
+	electionTimeout   int
 
 	// channels
 	heartbeatC chan bool
@@ -101,11 +106,14 @@ func (r *Raft) setNodes(n map[ID]*Node) {
 }
 
 func MakeRaft(id ID, nodes map[ID]*Node, log logger.Logger) *Raft {
+	cfg := config.Get()
 	r := &Raft{
-		me:            id,
-		nodexMutex:    &sync.Mutex{},
-		nextIdxMutex:  &sync.Mutex{},
-		matchIdxMutex: &sync.Mutex{},
+		me:                id,
+		nodexMutex:        &sync.Mutex{},
+		nextIdxMutex:      &sync.Mutex{},
+		matchIdxMutex:     &sync.Mutex{},
+		heartbeatInterval: cfg.RaftCluster.HeartbeatInterval,
+		electionTimeout:   cfg.RaftCluster.ElectionTimeout,
 	}
 	r.setNodes(nodes)
 	r.logger = log.With(
@@ -155,7 +163,7 @@ func (r *Raft) mainLoop() {
 		select {
 		case <-r.heartbeatC:
 			r.logger.Debug("Received heartbeat")
-		case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
+		case <-time.After(time.Duration(r.electionTimeout+rand.Intn(150)) * time.Millisecond):
 			r.logger.Info("Timed out, starting election")
 			r.state = Candidate
 		}
@@ -167,7 +175,7 @@ func (r *Raft) mainLoop() {
 		go r.broadcastRequestVote()
 
 		select {
-		case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
+		case <-time.After(time.Duration(r.electionTimeout+rand.Intn(150)) * time.Millisecond):
 			r.state = Follower
 		case <-r.toLeaderC:
 			r.state = Leader
@@ -182,9 +190,8 @@ func (r *Raft) mainLoop() {
 			r.persist()
 		}
 	case Leader:
-		r.logger.Debug("Sending heartbeat")
 		r.broadcastHeartbeat()
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(time.Duration(r.heartbeatInterval) * time.Millisecond)
 	}
 }
 
