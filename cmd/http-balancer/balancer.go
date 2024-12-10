@@ -23,6 +23,7 @@ func init() {
 func startApi(cmd *cobra.Command, args []string) {
 	log := logger.MakeLogger("cmd", "http-balancer")
 	config.InitWithCommands(flags, log)
+
 	s, err := server.NewHttpServer(log)
 	if err != nil {
 		panic(err)

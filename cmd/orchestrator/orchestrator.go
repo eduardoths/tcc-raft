@@ -18,13 +18,20 @@ var (
 		Short: "Orchestrates raft nodes",
 		Run:   RunOrchestrator,
 	}
+	flags *config.Flags
 )
+
+func init() {
+	flags = config.InitFlags(OrchestratorCmd)
+}
 
 func RunOrchestrator(cmd *cobra.Command, args []string) {
 	log := logger.MakeLogger("cmd", "orchestrator")
 	config.InitWithYaml(log)
-
 	cfg := config.Get()
+	cfg.Port = flags.Port
+	config.Set(cfg)
+
 	var wg sync.WaitGroup
 
 	nodes := make(map[raft.ID]*raft.Node, cfg.RaftCluster.ServerCount)
@@ -34,7 +41,6 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 		}
 	}
 	nodesStr := cfg.RaftCluster.NodesStr()
-	cfg.Log.Info(nodesStr)
 
 	for _, s := range cfg.RaftCluster.Servers {
 		execCmd := exec.Command(

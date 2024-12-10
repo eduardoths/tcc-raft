@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -119,12 +118,10 @@ func Get() Config {
 	cfg := *globalConfig
 	copy(cfg.RaftCluster.Servers, globalConfig.RaftCluster.Servers)
 
-	b, _ := json.Marshal(cfg)
-	cfg.Log.Info(string(b))
 	return cfg
 }
 
-func set(cfg Config) {
+func Set(cfg Config) {
 	mu.Lock()
 	defer mu.Unlock()
 	var tmp []Server = make([]Server, 0)
@@ -146,7 +143,7 @@ func RemoveNode(key string) {
 		}
 	}
 
-	set(cfg)
+	Set(cfg)
 }
 
 func AddNode(key string, addr string) {
@@ -159,5 +156,5 @@ func AddNode(key string, addr string) {
 	})
 	cfg.RaftCluster.ServerCount += 1
 
-	set(cfg)
+	Set(cfg)
 }
