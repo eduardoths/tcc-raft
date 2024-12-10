@@ -27,11 +27,11 @@ type Server struct {
 	pb.UnimplementedAdminServer
 }
 
-func CreateServer(raft *raft.Raft) *Server {
+func CreateServer(raft *raft.Raft, log logger.Logger) *Server {
 	return &Server{
 		mu:     sync.Mutex{},
 		raft:   raft,
-		logger: logger.MakeLogger(),
+		logger: log.With("where", "raft-server"),
 	}
 }
 

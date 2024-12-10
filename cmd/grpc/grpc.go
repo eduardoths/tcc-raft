@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eduardoths/tcc-raft/internal/config"
 	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/eduardoths/tcc-raft/raft"
 	"github.com/eduardoths/tcc-raft/server"
@@ -11,56 +12,36 @@ import (
 )
 
 var (
-	serverID          string
-	log               logger.Logger
-	port              int
-	serverCount       int
-	servers           map[string]string
-	electionTimeout   int
-	heartbeatInterval int
-	enableK8s         bool
-	GrpcCMD           = &cobra.Command{
+	GrpcCMD = &cobra.Command{
 		Use:   "grpc",
 		Short: "Start grpc server",
 		Run:   startServer,
 	}
+	flags *config.Flags
 )
 
 func init() {
-	log = logger.MakeLogger("cmd", "grpc")
-	// Define flags for the root command
-	GrpcCMD.Flags().StringVar(&serverID, "id", "server-1", "Unique server ID")
-	GrpcCMD.Flags().IntVar(&port, "port", 8080, "Port to run the HTTP server on")
-	GrpcCMD.Flags().IntVar(&electionTimeout, "election_timeout", 5000, "Election timeout in milliseconds")
-	GrpcCMD.Flags().IntVar(&heartbeatInterval, "heartbeat_interval", 1000, "Heartbeat interval in milliseconds")
-	GrpcCMD.Flags().IntVar(&serverCount, "server_count", 1, "Number of servers running")
-	GrpcCMD.Flags().BoolVar(&enableK8s, "enable_k8s", false, "Enable kubernetes support")
-	GrpcCMD.Flags().StringToStringVar(
-		&servers,
-		"servers_map",
-		map[string]string{serverID: fmt.Sprintf("[::]:%d", port)},
-		"Map of nodes in the system",
-	)
+	flags = config.InitFlags(GrpcCMD)
 
-	permissions := os.FileMode(0755)
-	if err := os.MkdirAll("data/persistency/", permissions); err != nil {
-		panic(err)
-	}
 }
 
 func startServer(cmd *cobra.Command, args []string) {
+	log := logger.MakeLogger("cmd", "grpc")
+	config.InitWithCommands(flags, log)
 	nodes := make(map[string]*raft.Node, 1)
-	for k, v := range servers {
-		nodes[k] = &raft.Node{
-			Address: v,
+	cfg := config.Get()
+	for _, srv := range cfg.RaftCluster.Servers {
+		nodes[srv.ID] = &raft.Node{
+			Address: srv.Addr(),
 		}
 	}
 
 	server := server.CreateServer(
-		raft.MakeRaft(serverID, nodes),
+		raft.MakeRaft(cfg.ID, nodes, cfg.Log),
+		cfg.Log,
 	)
 
-	server.Start(fmt.Sprintf(":%d", port))
+	server.Start(fmt.Sprintf(":%d", cfg.Port))
 }
 
 func main() {

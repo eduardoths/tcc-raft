@@ -100,7 +100,7 @@ func (r *Raft) setNodes(n map[ID]*Node) {
 	}
 }
 
-func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
+func MakeRaft(id ID, nodes map[ID]*Node, log logger.Logger) *Raft {
 	r := &Raft{
 		me:            id,
 		nodexMutex:    &sync.Mutex{},
@@ -108,7 +108,8 @@ func MakeRaft(id ID, nodes map[ID]*Node) *Raft {
 		matchIdxMutex: &sync.Mutex{},
 	}
 	r.setNodes(nodes)
-	r.logger = logger.MakeLogger(
+	r.logger = log.With(
+		"where", "raft",
 		"server", id,
 		"term", &r.currentTerm,
 		"state", &r.state,
@@ -155,7 +156,7 @@ func (r *Raft) mainLoop() {
 		case <-r.heartbeatC:
 			r.logger.Debug("Received heartbeat")
 		case <-time.After(time.Duration(rand.Intn(150)+150) * time.Millisecond):
-			r.logger.Debug("Timed out")
+			r.logger.Info("Timed out, starting election")
 			r.state = Candidate
 		}
 	case Candidate:

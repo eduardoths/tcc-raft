@@ -1,8 +1,20 @@
 package dto
 
 import (
+	"fmt"
+
 	pb "github.com/eduardoths/tcc-raft/proto"
 )
+
+type AddNodeArgs struct {
+	ID   string `json:"id"`
+	Host string `json:"host"`
+	Port int    `json:"port"`
+}
+
+func (ana AddNodeArgs) Addr() string {
+	return fmt.Sprintf("%s:%d", ana.Host, ana.Port)
+}
 
 type SetNodesArgs struct {
 	Nodes map[ID]string

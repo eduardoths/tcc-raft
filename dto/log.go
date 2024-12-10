@@ -10,6 +10,13 @@ type SetArgs struct {
 	Value []byte
 }
 
+func (sa SetArgs) ToProto() *pb.SetArgs {
+	return &pb.SetArgs{
+		Key:   sa.Key,
+		Value: sa.Value,
+	}
+}
+
 func SetArgsFromProto(proto *pb.SetArgs) SetArgs {
 	return SetArgs{
 		Key:   proto.GetKey(),
@@ -22,6 +29,13 @@ type SetReply struct {
 	Noted bool
 }
 
+func SetReplyFromProto(proto *pb.SetReply) SetReply {
+	return SetReply{
+		Index: int(proto.GetIndex()),
+		Noted: proto.GetNoted(),
+	}
+}
+
 func (sr SetReply) ToProto() *pb.SetReply {
 	return &pb.SetReply{
 		Index: int32(sr.Index),
@@ -31,6 +45,12 @@ func (sr SetReply) ToProto() *pb.SetReply {
 
 type DeleteArgs struct {
 	Key string
+}
+
+func (da DeleteArgs) ToProto() *pb.DeleteArgs {
+	return &pb.DeleteArgs{
+		Key: da.Key,
+	}
 }
 
 func DeleteArgsFromProto(proto *pb.DeleteArgs) DeleteArgs {
@@ -55,6 +75,12 @@ type GetArgs struct {
 	Key string
 }
 
+func (ga GetArgs) ToProto() *pb.GetArgs {
+	return &pb.GetArgs{
+		Key: ga.Key,
+	}
+}
+
 func GetArgsFromProto(proto *pb.GetArgs) GetArgs {
 	return GetArgs{
 		Key: proto.GetKey(),
@@ -63,6 +89,12 @@ func GetArgsFromProto(proto *pb.GetArgs) GetArgs {
 
 type GetReply struct {
 	Value []byte
+}
+
+func GetReplyFromProto(proto *pb.GetReply) GetReply {
+	return GetReply{
+		Value: proto.GetValue(),
+	}
 }
 
 func (gr GetReply) ToProto() *pb.GetReply {

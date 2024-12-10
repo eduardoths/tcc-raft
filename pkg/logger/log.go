@@ -35,6 +35,10 @@ func (l *logger) Warn(msg string, a ...any) {
 func (l *logger) With(keysAndValues ...interface{}) Logger {
 	var newKeysAndValues []interface{}
 	copy(newKeysAndValues, l.keysAndValues)
+
 	newKeysAndValues = append(newKeysAndValues, keysAndValues...)
-	return MakeLogger(newKeysAndValues)
+	return &logger{
+		sugar:         l.sugar,
+		keysAndValues: newKeysAndValues,
+	}
 }
