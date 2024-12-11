@@ -1,13 +1,15 @@
 package dto
 
 import (
+	"fmt"
+
 	pb "github.com/eduardoths/tcc-raft/proto"
 	"github.com/eduardoths/tcc-raft/structs"
 )
 
 type SetArgs struct {
-	Key   string
-	Value []byte
+	Key   string `json:"key"`
+	Value []byte `json:"value"`
 }
 
 func (sa SetArgs) ToProto() *pb.SetArgs {
@@ -25,8 +27,8 @@ func SetArgsFromProto(proto *pb.SetArgs) SetArgs {
 }
 
 type SetReply struct {
-	Index int
-	Noted bool
+	Index int  `json:"index"`
+	Noted bool `json:"noted"`
 }
 
 func SetReplyFromProto(proto *pb.SetReply) SetReply {
@@ -44,7 +46,7 @@ func (sr SetReply) ToProto() *pb.SetReply {
 }
 
 type DeleteArgs struct {
-	Key string
+	Key string `json:"key"`
 }
 
 func (da DeleteArgs) ToProto() *pb.DeleteArgs {
@@ -60,8 +62,8 @@ func DeleteArgsFromProto(proto *pb.DeleteArgs) DeleteArgs {
 }
 
 type DeleteReply struct {
-	Index int
-	Noted bool
+	Index int  `json:"index"`
+	Noted bool `json:"noted"`
 }
 
 func (dr DeleteReply) ToProto() *pb.DeleteReply {
@@ -72,7 +74,7 @@ func (dr DeleteReply) ToProto() *pb.DeleteReply {
 }
 
 type GetArgs struct {
-	Key string
+	Key string `json:"key"`
 }
 
 func (ga GetArgs) ToProto() *pb.GetArgs {
@@ -88,7 +90,13 @@ func GetArgsFromProto(proto *pb.GetArgs) GetArgs {
 }
 
 type GetReply struct {
-	Value []byte
+	Value []byte `json:"value"`
+}
+
+func (gr GetReply) ToResponse() GetResponse {
+	return GetResponse{
+		Value: fmt.Sprintf("%s", gr.Value),
+	}
 }
 
 func GetReplyFromProto(proto *pb.GetReply) GetReply {

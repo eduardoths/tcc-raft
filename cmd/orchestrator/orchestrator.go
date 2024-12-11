@@ -67,6 +67,7 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 
 	balancerCmd := exec.Command(
 		"./bin/cli", "http-balancer",
+		"--port", fmt.Sprintf("%d", cfg.Port),
 		"--election_timeout", fmt.Sprintf("%d", cfg.RaftCluster.ElectionTimeout),
 		"--heartbeat_interval", fmt.Sprintf("%d", cfg.RaftCluster.HeartbeatInterval),
 		"--server_count", fmt.Sprintf("%d", cfg.RaftCluster.ServerCount),

@@ -36,11 +36,12 @@ func NewHttpServer(log logger.Logger) (*HttpServer, error) {
 		log:       log,
 		dbHandler: handlers.NewDatabaseHandler(),
 	}
+	log.Info("%d", cfg.Port)
 
 	dbApi := api.Group("/db")
 	dbApi.POST("/", server.dbHandler.Set)
-	dbApi.GET("/:id", server.dbHandler.Get)
-	dbApi.DELETE("/:id", server.dbHandler.Delete)
+	dbApi.GET("/:key", server.dbHandler.Get)
+	dbApi.DELETE("/:key", server.dbHandler.Delete)
 
 	adminApi := api.Group("/admin")
 	adminApi.DELETE("/:id", func(c *gin.Context) {

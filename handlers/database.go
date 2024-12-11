@@ -37,6 +37,7 @@ func NewDatabaseHandler() *DatabaseHandler {
 			dh.l.Error(err, "Failed to generate new database client for server %s", srv.ID)
 		}
 		dh.clients[srv.ID] = client
+		dh.keys = append(dh.keys, srv.ID)
 	}
 
 	return dh
@@ -90,9 +91,9 @@ func (dh *DatabaseHandler) RemoveNode(id string) error {
 }
 
 func (dh DatabaseHandler) Set(c *gin.Context) {
-	var args dto.SetArgs
+	var body dto.SetBody
 
-	if err := c.ShouldBindJSON(&args); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, dto.Response{
 			Error: dto.Point("Invalid body, should be JSON"),
 		})
@@ -100,12 +101,13 @@ func (dh DatabaseHandler) Set(c *gin.Context) {
 	}
 
 	id, client := dh.next()
-	resp, err := client.Set(c.Request.Context(), args)
+	resp, err := client.Set(c.Request.Context(), body.ToArgs())
 	if err != nil {
 		dh.l.With("to-id", id).Error(err, "Failed to create set request")
 		c.JSON(http.StatusBadGateway, dto.Response{
 			Error: dto.Point(err.Error()),
 		})
+		return
 	}
 
 	c.JSON(http.StatusCreated, dto.Response{
@@ -114,12 +116,12 @@ func (dh DatabaseHandler) Set(c *gin.Context) {
 }
 
 func (dh DatabaseHandler) Get(c *gin.Context) {
-	params := c.Param("key")
+	param := c.Param("key")
 
 	id, client := dh.next()
 
 	resp, err := client.Get(c.Request.Context(), dto.GetArgs{
-		Key: params,
+		Key: param,
 	})
 
 	if err != nil {
@@ -127,10 +129,11 @@ func (dh DatabaseHandler) Get(c *gin.Context) {
 		c.JSON(http.StatusBadGateway, dto.Response{
 			Error: dto.Point(err.Error()),
 		})
+		return
 	}
 
 	c.JSON(http.StatusOK, dto.Response{
-		Data: resp,
+		Data: resp.ToResponse(),
 	})
 }
 
@@ -148,6 +151,7 @@ func (dh DatabaseHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusBadGateway, dto.Response{
 			Error: dto.Point(err.Error()),
 		})
+		return
 	}
 
 	c.JSON(http.StatusNoContent, nil)
