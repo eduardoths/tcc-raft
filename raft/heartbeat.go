@@ -8,9 +8,6 @@ import (
 )
 
 func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.HeartbeatReply, error) {
-	r.nodexMutex.Lock()
-	defer r.nodexMutex.Unlock()
-
 	if args.Term < r.currentTerm {
 		return dto.HeartbeatReply{Success: false, Term: r.currentTerm, NextIndex: 0}, nil
 	}
@@ -43,8 +40,6 @@ func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.Heart
 }
 
 func (r *Raft) broadcastHeartbeat() {
-	r.nodexMutex.Lock()
-	defer r.nodexMutex.Unlock()
 	for i := range r.getNodes() {
 		var args dto.HeartbeatArgs
 
