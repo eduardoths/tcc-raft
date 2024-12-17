@@ -31,3 +31,8 @@ func SetNodesArgsFromProto(proto *pb.SetNodesArgs) SetNodesArgs {
 
 	return nodesArgs
 }
+
+type SetLeader struct {
+	ID   string `json:"id"`
+	Term int    `json:"term"`
+}

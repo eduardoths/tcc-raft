@@ -53,3 +53,16 @@ func (dc DatabaseClient) Delete(ctx context.Context, args dto.DeleteArgs) error 
 	_, err := dc.client.Delete(ctx, args.ToProto())
 	return err
 }
+
+func (dc DatabaseClient) GetLeader(ctx context.Context) (dto.SetLeader, error) {
+	r, err := dc.client.GetLeader(ctx, &proto.EmptyDB{})
+
+	if err != nil {
+		return dto.SetLeader{}, err
+	}
+
+	return dto.SetLeader{
+		ID:   r.GetId(),
+		Term: int(r.GetTerm()),
+	}, nil
+}

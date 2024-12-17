@@ -4,13 +4,13 @@ raft_cluster:
     - id: A
       host: "localhost"
       port: 8080
-    # - id: B
-    #   host: "localhost"
-    #   port: 8081
-    # - id: C
-    #   host: "localhost"
-    #   port: 8082
+    - id: B
+      host: "localhost"
+      port: 8081
+    - id: C
+      host: "localhost"
+      port: 8082
 
   # Additional Raft configuration
-  election_timeout: 1500 # Timeout (ms) for starting an election
-  heartbeat_interval: 1000 # Interval (ms) for leader to send heartbeats
+  election_timeout: 150 # Timeout (ms) for starting an election
+  heartbeat_interval: 50 # Interval (ms) for leader to send heartbeats

@@ -19,20 +19,23 @@ type AdminHandler struct {
 	l       logger.Logger
 }
 
-func NewAdminHandler(addr string, servers map[string]string) *AdminHandler {
+func NewAdminHandler() *AdminHandler {
 	ah := &AdminHandler{
 		mu:      &sync.Mutex{},
 		clients: make(map[string]*client.AdminClient),
 		l:       logger.MakeLogger("handler", "admin", "server", "balancer"),
 	}
 
-	for id, v := range servers {
-		client, err := client.NewAdminClient(v)
+	servers := config.Get().RaftCluster.Servers
+
+	for _, v := range servers {
+		client, err := client.NewAdminClient(v.Addr())
 		if err != nil {
 			ah.l.Error(err, "Failed to generate new admin client")
 		}
-		ah.clients[id] = client
+		ah.clients[v.ID] = client
 	}
+	ah.l.Info("clients %v", ah.clients)
 
 	return ah
 }
@@ -87,11 +90,12 @@ func (ah *AdminHandler) spawnNode(args dto.AddNodeArgs) {
 }
 
 func (ah *AdminHandler) ShutdownNode(id string) error {
-	delete(ah.clients, id)
-
 	if err := ah.clients[id].Shutdown(context.Background()); err != nil {
+		ah.l.Error(err, "failed to shutdown")
 		return err
 	}
+
+	delete(ah.clients, id)
 
 	nodes := map[string]string{}
 	for k, v := range ah.clients {

@@ -8,6 +8,7 @@ service Database {
     rpc Set(SetArgs) returns (SetReply);
     rpc Delete(DeleteArgs) returns (DeleteReply);
     rpc Get(GetArgs) returns (GetReply);
+    rpc GetLeader(EmptyDB) returns (GetLeaderReply);
 }
 
 message SetArgs {
@@ -37,3 +38,9 @@ message GetReply {
     bytes value = 1;
 }
 
+message EmptyDB {}
+
+message GetLeaderReply {
+    string id = 1;
+    int32 term = 2;
+}

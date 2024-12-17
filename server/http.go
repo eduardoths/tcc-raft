@@ -45,8 +45,9 @@ func NewHttpServer(log logger.Logger) (*HttpServer, error) {
 	api := router.Group("/api/v1")
 
 	server := &HttpServer{
-		log:       log,
-		dbHandler: handlers.NewDatabaseHandler(),
+		log:          log,
+		dbHandler:    handlers.NewDatabaseHandler(),
+		adminHandler: handlers.NewAdminHandler(),
 	}
 	log.Info("%d", cfg.Port)
 
@@ -91,6 +92,26 @@ func NewHttpServer(log logger.Logger) (*HttpServer, error) {
 
 		c.JSON(http.StatusCreated, dto.Response{
 			Data: "New node created",
+		})
+	})
+	adminApi.PATCH("/set-leader/", func(c *gin.Context) {
+		var body dto.SetLeader
+		if err := c.BindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, dto.Response{
+				Error: dto.Point(err.Error()),
+			})
+			return
+		}
+
+		if err := server.dbHandler.SetLeader(body); err != nil {
+			c.JSON(http.StatusBadGateway, dto.Response{
+				Error: dto.Point(err.Error()),
+			})
+			return
+		}
+
+		c.JSON(http.StatusCreated, dto.Response{
+			Data: "set leader",
 		})
 	})
 

@@ -1,7 +1,11 @@
 package raft
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/eduardoths/tcc-raft/dto"
 	grpcutil "github.com/eduardoths/tcc-raft/internal/util/grpc"
@@ -78,4 +82,38 @@ func (r *Raft) doRequestVote(serverID ID, args dto.VoteArgs) (dto.VoteReply, err
 		return dto.VoteReply{}, err
 	}
 	return dto.VoteReplyFromProto(response), nil
+}
+
+func (r *Raft) sendLeaderInfoToServer() {
+	data := dto.SetLeader{
+		ID:   r.me,
+		Term: r.currentTerm,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		r.logger.Error(err, "marshaling json %v", jsonData)
+		return
+	}
+
+	// Create a PATCH request
+	url := "http://localhost:3000/api/v1/admin/set-leader/"
+	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		r.logger.Error(err, "creating request")
+		return
+	}
+
+	// Set the headers
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request using http.DefaultClient
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error sending request: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
 }

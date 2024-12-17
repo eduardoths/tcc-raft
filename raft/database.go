@@ -92,3 +92,10 @@ func (r *Raft) Get(ctx context.Context, args dto.GetArgs) (dto.GetReply, error) 
 	}
 	return dto.GetReply{Value: b}, nil
 }
+
+func (r *Raft) GetLeader(ctx context.Context) (dto.SetLeader, error) {
+	return dto.SetLeader{
+		Term: r.currentTerm,
+		ID:   r.votedFor,
+	}, nil
+}

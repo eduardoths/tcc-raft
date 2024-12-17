@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"sync"
@@ -13,11 +14,12 @@ import (
 )
 
 type DatabaseHandler struct {
-	mu      *sync.Mutex
-	keys    []string
-	index   int
-	clients map[string]*client.DatabaseClient
-	l       logger.Logger
+	mu       *sync.Mutex
+	keys     []string
+	index    int
+	leaderID string
+	clients  map[string]*client.DatabaseClient
+	l        logger.Logger
 }
 
 func NewDatabaseHandler() *DatabaseHandler {
@@ -100,7 +102,8 @@ func (dh DatabaseHandler) Set(c *gin.Context) {
 		return
 	}
 
-	id, client := dh.next()
+	id, client := dh.fetchLeader()
+
 	resp, err := client.Set(c.Request.Context(), body.ToArgs())
 	if err != nil {
 		dh.l.With("to-id", id).Error(err, "Failed to create set request")
@@ -140,7 +143,7 @@ func (dh DatabaseHandler) Get(c *gin.Context) {
 func (dh DatabaseHandler) Delete(c *gin.Context) {
 	params := c.Param("key")
 
-	id, client := dh.next()
+	id, client := dh.fetchLeader()
 
 	err := client.Delete(c.Request.Context(), dto.DeleteArgs{
 		Key: params,
@@ -155,4 +158,33 @@ func (dh DatabaseHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, nil)
+}
+
+func (dh *DatabaseHandler) SetLeader(args dto.SetLeader) error {
+	dh.mu.Lock()
+	defer dh.mu.Unlock()
+
+	dh.leaderID = args.ID
+
+	return nil
+}
+
+func (dh *DatabaseHandler) fetchLeader() (string, *client.DatabaseClient) {
+	dh.mu.Lock()
+	defer dh.mu.Unlock()
+
+	if dh.leaderID == "" {
+		l := dh.GetLeader()
+		dh.leaderID = l.ID
+	}
+
+	id := dh.leaderID
+	client := dh.clients[id]
+	return id, client
+}
+
+func (dh *DatabaseHandler) GetLeader() dto.SetLeader {
+	_, client := dh.next()
+	l, _ := client.GetLeader(context.Background())
+	return l
 }

@@ -188,6 +188,10 @@ func (r *Raft) mainLoop() {
 			}
 			r.logger.Info("Became a leader")
 			r.persist()
+			go func() {
+				r.sendLeaderInfoToServer()
+			}()
+
 		}
 	case Leader:
 		r.broadcastHeartbeat()

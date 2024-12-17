@@ -10,6 +10,7 @@ import (
 
 	"github.com/eduardoths/tcc-raft/dto"
 	"github.com/eduardoths/tcc-raft/pkg/logger"
+	"github.com/eduardoths/tcc-raft/proto"
 	pb "github.com/eduardoths/tcc-raft/proto"
 	"github.com/eduardoths/tcc-raft/raft"
 	"google.golang.org/grpc"
@@ -45,6 +46,7 @@ func (s *Server) Start(port string) {
 	s.grpc = grpc.NewServer()
 	pb.RegisterRaftServer(s.grpc, s)
 	pb.RegisterDatabaseServer(s.grpc, s)
+	pb.RegisterAdminServer(s.grpc, s)
 	s.logger.Info("Listening at %v", lis.Addr())
 
 	go func() {
@@ -152,4 +154,12 @@ func (s *Server) SetNodes(ctx context.Context, args *pb.SetNodesArgs) (*pb.Empty
 
 func (s *Server) Shutdown(ctx context.Context, _ *pb.Empty) (*pb.Empty, error) {
 	return &pb.Empty{}, s.raft.Shutdown(ctx)
+}
+
+func (s *Server) GetLeader(ctx context.Context, _ *pb.EmptyDB) (*pb.GetLeaderReply, error) {
+	d, _ := s.raft.GetLeader(ctx)
+	return &proto.GetLeaderReply{
+		Id:   d.ID,
+		Term: int32(d.Term),
+	}, nil
 }
