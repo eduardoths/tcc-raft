@@ -124,15 +124,15 @@ func NewRestApiServer(log logger.Logger) (*RestApiServer, error) {
 }
 
 func (r *RestApiServer) Start() {
+	defer r.Close()
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		if err := r.srv.ListenAndServe(); err != nil {
 			r.log.Error(err, "failed to start server")
 			panic(err)
 		}
 	}()
-	defer r.Close()
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 }
 

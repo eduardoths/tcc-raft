@@ -44,7 +44,7 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 
 	for _, s := range cfg.RaftCluster.Servers {
 		execCmd := exec.Command(
-			"./bin/cli", "grpc",
+			"./bin/cli", "node",
 			"--id", s.ID,
 			"--port", s.Port,
 			"--election_timeout", fmt.Sprintf("%d", cfg.RaftCluster.ElectionTimeout),
@@ -66,8 +66,8 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 	}
 
 	balancerCmd := exec.Command(
-		"./bin/cli", "http-balancer",
-		"--port", fmt.Sprintf("%d", cfg.Port),
+		"./bin/cli", "balancer",
+		"--port", fmt.Sprintf("%d", cfg.RaftCluster.BalancerPort),
 		"--election_timeout", fmt.Sprintf("%d", cfg.RaftCluster.ElectionTimeout),
 		"--heartbeat_interval", fmt.Sprintf("%d", cfg.RaftCluster.HeartbeatInterval),
 		"--server_count", fmt.Sprintf("%d", cfg.RaftCluster.ServerCount),
@@ -82,6 +82,23 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 		defer wg.Done()
 		if err := balancerCmd.Run(); err != nil {
 			log.Error(err, "Failed to run balancer")
+		}
+	}()
+
+	restCmd := exec.Command(
+		"./bin/cli", "rest-api",
+		"--port", fmt.Sprintf("%d", cfg.RaftCluster.RestPort),
+		"--election_timeout", fmt.Sprintf("%d", cfg.RaftCluster.ElectionTimeout),
+		"--heartbeat_interval", fmt.Sprintf("%d", cfg.RaftCluster.HeartbeatInterval),
+		"--server_count", fmt.Sprintf("%d", cfg.RaftCluster.ServerCount),
+		"--servers_map", nodesStr,
+	)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := restCmd.Run(); err != nil {
+			log.Error(err, "Failed to run rest cmd")
 		}
 	}()
 

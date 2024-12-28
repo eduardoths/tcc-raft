@@ -32,6 +32,10 @@ type RaftCluster struct {
 	ElectionTimeout   int      `yaml:"election_timeout" json:"election_timeout"`
 	HeartbeatInterval int      `yaml:"heartbeat_interval" json:"heartbeat_interval"`
 	EnableK8s         bool     `yaml:"enable_k8s" json:"enable_k8s"`
+	BalancerPort      int      `yaml:"balancer_port" json:"balancer_port"`
+	BalancerHost      int      `yaml:"balancer_host" json:"balancer_host"`
+	RestPort          int      `yaml:"rest_port" json:"rest_port"`
+	RestHost          int      `yaml:"rest_host" json:"rest_host"`
 }
 
 func (rc RaftCluster) NodesStr() string {

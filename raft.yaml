@@ -14,3 +14,9 @@ raft_cluster:
   # Additional Raft configuration
   election_timeout: 1500 # Timeout (ms) for starting an election
   heartbeat_interval: 150 # Interval (ms) for leader to send heartbeats
+
+  balancer_port: 8000
+  balancer_host: "localhost"
+
+  rest_port: 3000
+  rest_host: "localhost"

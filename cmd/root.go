@@ -2,7 +2,7 @@ package main
 
 import (
 	balancer "github.com/eduardoths/tcc-raft/cmd/balancer"
-	"github.com/eduardoths/tcc-raft/cmd/grpc"
+	"github.com/eduardoths/tcc-raft/cmd/node"
 	"github.com/eduardoths/tcc-raft/cmd/orchestrator"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(
-		grpc.GrpcCMD,
+		node.NodeCMD,
 		orchestrator.OrchestratorCmd,
 		balancer.BalancerCMD,
 	)

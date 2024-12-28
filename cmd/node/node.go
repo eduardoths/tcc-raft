@@ -1,4 +1,4 @@
-package grpc
+package node
 
 import (
 	"fmt"
@@ -12,21 +12,21 @@ import (
 )
 
 var (
-	GrpcCMD = &cobra.Command{
-		Use:   "grpc",
-		Short: "Start grpc server",
+	NodeCMD = &cobra.Command{
+		Use:   "node",
+		Short: "Start new node containing a raft database server",
 		Run:   startServer,
 	}
 	flags *config.Flags
 )
 
 func init() {
-	flags = config.InitFlags(GrpcCMD)
+	flags = config.InitFlags(NodeCMD)
 
 }
 
 func startServer(cmd *cobra.Command, args []string) {
-	log := logger.MakeLogger("cmd", "grpc")
+	log := logger.MakeLogger("cmd", "raft-database")
 	config.InitWithCommands(flags, log)
 	nodes := make(map[string]*raft.Node, 1)
 	cfg := config.Get()
@@ -45,7 +45,7 @@ func startServer(cmd *cobra.Command, args []string) {
 }
 
 func main() {
-	if err := GrpcCMD.Execute(); err != nil {
+	if err := NodeCMD.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
