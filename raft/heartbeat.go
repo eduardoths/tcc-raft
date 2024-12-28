@@ -12,6 +12,18 @@ func (r *Raft) Heartbeat(ctx context.Context, args dto.HeartbeatArgs) (dto.Heart
 		return dto.HeartbeatReply{Success: false, Term: r.currentTerm, NextIndex: 0}, nil
 	}
 
+	if args.Term > r.currentTerm {
+		func() {
+			// keeping a separate function to unlock quickly
+			r.electionMutex.Lock()
+			defer r.electionMutex.Unlock()
+			r.currentTerm = args.Term
+			r.votedFor = args.LeaderID
+			r.logger.Info("Updating current term")
+		}()
+		r.persist()
+	}
+
 	r.heartbeatC <- true
 	if args.PrevLogIndex > r.getLastIndex() {
 		return dto.HeartbeatReply{

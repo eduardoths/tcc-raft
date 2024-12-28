@@ -28,9 +28,10 @@ type Raft struct {
 	voteCount int
 
 	// persistent stage on all servers
-	currentTerm int
-	votedFor    ID
-	logEntry    []structs.LogEntry
+	electionMutex *sync.Mutex
+	currentTerm   int
+	votedFor      ID
+	logEntry      []structs.LogEntry
 
 	// volatile state on all servers
 	commitIndex int
@@ -112,6 +113,7 @@ func MakeRaft(id ID, nodes map[ID]*Node, log logger.Logger) *Raft {
 		nodexMutex:        &sync.Mutex{},
 		nextIdxMutex:      &sync.Mutex{},
 		matchIdxMutex:     &sync.Mutex{},
+		electionMutex:     &sync.Mutex{},
 		heartbeatInterval: cfg.RaftCluster.HeartbeatInterval,
 		electionTimeout:   cfg.RaftCluster.ElectionTimeout,
 	}
