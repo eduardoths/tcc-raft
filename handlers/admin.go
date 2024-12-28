@@ -1,114 +1,114 @@
 package handlers
 
-import (
-	"context"
-	"fmt"
-	"os"
-	"os/exec"
-	"sync"
+// import (
+// 	"context"
+// 	"fmt"
+// 	"os"
+// 	"os/exec"
+// 	"sync"
 
-	"github.com/eduardoths/tcc-raft/dto"
-	"github.com/eduardoths/tcc-raft/internal/config"
-	"github.com/eduardoths/tcc-raft/pkg/client"
-	"github.com/eduardoths/tcc-raft/pkg/logger"
-)
+// 	"github.com/eduardoths/tcc-raft/dto"
+// 	"github.com/eduardoths/tcc-raft/internal/config"
+// 	"github.com/eduardoths/tcc-raft/pkg/client"
+// 	"github.com/eduardoths/tcc-raft/pkg/logger"
+// )
 
-type AdminHandler struct {
-	mu      *sync.Mutex
-	clients map[string]*client.AdminClient
-	l       logger.Logger
-}
+// type AdminHandler struct {
+// 	mu      *sync.Mutex
+// 	clients map[string]*client.AdminClient
+// 	l       logger.Logger
+// }
 
-func NewAdminHandler() *AdminHandler {
-	ah := &AdminHandler{
-		mu:      &sync.Mutex{},
-		clients: make(map[string]*client.AdminClient),
-		l:       logger.MakeLogger("handler", "admin", "server", "balancer"),
-	}
+// func NewAdminHandler() *AdminHandler {
+// 	ah := &AdminHandler{
+// 		mu:      &sync.Mutex{},
+// 		clients: make(map[string]*client.AdminClient),
+// 		l:       logger.MakeLogger("handler", "admin", "server", "balancer"),
+// 	}
 
-	servers := config.Get().RaftCluster.Servers
+// 	servers := config.Get().RaftCluster.Servers
 
-	for _, v := range servers {
-		client, err := client.NewAdminClient(v.Addr())
-		if err != nil {
-			ah.l.Error(err, "Failed to generate new admin client")
-		}
-		ah.clients[v.ID] = client
-	}
-	ah.l.Info("clients %v", ah.clients)
+// 	for _, v := range servers {
+// 		client, err := client.NewAdminClient(v.Addr())
+// 		if err != nil {
+// 			ah.l.Error(err, "Failed to generate new admin client")
+// 		}
+// 		ah.clients[v.ID] = client
+// 	}
+// 	ah.l.Info("clients %v", ah.clients)
 
-	return ah
-}
+// 	return ah
+// }
 
-func (ah *AdminHandler) AddNode(args dto.AddNodeArgs) error {
-	cl, err := client.NewAdminClient(fmt.Sprintf("%s:%d", args.Host, args.Port))
-	if err != nil {
-		return err
-	}
-	ah.clients[args.ID] = cl
+// func (ah *AdminHandler) AddNode(args dto.AddNodeArgs) error {
+// 	cl, err := client.NewAdminClient(fmt.Sprintf("%s:%d", args.Host, args.Port))
+// 	if err != nil {
+// 		return err
+// 	}
+// 	ah.clients[args.ID] = cl
 
-	ah.spawnNode(args)
+// 	ah.spawnNode(args)
 
-	nodes := map[string]string{}
-	for k, v := range ah.clients {
-		nodes[k] = v.Addr
-	}
+// 	nodes := map[string]string{}
+// 	for k, v := range ah.clients {
+// 		nodes[k] = v.Addr
+// 	}
 
-	for _, cl := range ah.clients {
-		if err := cl.SetNodes(context.Background(), nodes); err != nil {
-			ah.l.Error(err, "failed to set nodes to server")
-		}
-	}
+// 	for _, cl := range ah.clients {
+// 		if err := cl.SetNodes(context.Background(), nodes); err != nil {
+// 			ah.l.Error(err, "failed to set nodes to server")
+// 		}
+// 	}
 
-	config.AddNode(args.ID, args.Addr())
+// 	config.AddNode(args.ID, args.Addr())
 
-	return nil
-}
+// 	return nil
+// }
 
-func (ah *AdminHandler) spawnNode(args dto.AddNodeArgs) {
-	ah.mu.Lock()
-	defer ah.mu.Unlock()
+// func (ah *AdminHandler) spawnNode(args dto.AddNodeArgs) {
+// 	ah.mu.Lock()
+// 	defer ah.mu.Unlock()
 
-	nodes := make(map[string]string)
-	for k, v := range ah.clients {
-		nodes[k] = v.Addr
-	}
+// 	nodes := make(map[string]string)
+// 	for k, v := range ah.clients {
+// 		nodes[k] = v.Addr
+// 	}
 
-	nodesStr := config.Get().RaftCluster.NodesStr()
-	nodesStr = fmt.Sprintf("%s,%s=%s", nodesStr, args.ID, args.Addr())
+// 	nodesStr := config.Get().RaftCluster.NodesStr()
+// 	nodesStr = fmt.Sprintf("%s,%s=%s", nodesStr, args.ID, args.Addr())
 
-	execCmd := exec.Command(
-		"./bin/cli", "grpc",
-		"--id", args.ID,
-		"--port", fmt.Sprintf("%d", args.Port),
-		"--server_count", fmt.Sprintf("%d", len(ah.clients)+1),
-		"--servers_map", nodesStr,
-	)
-	// Forward standard output and error
-	execCmd.Stdout = os.Stdout
-	execCmd.Stderr = os.Stderr
-}
+// 	execCmd := exec.Command(
+// 		"./bin/cli", "grpc",
+// 		"--id", args.ID,
+// 		"--port", fmt.Sprintf("%d", args.Port),
+// 		"--server_count", fmt.Sprintf("%d", len(ah.clients)+1),
+// 		"--servers_map", nodesStr,
+// 	)
+// 	// Forward standard output and error
+// 	execCmd.Stdout = os.Stdout
+// 	execCmd.Stderr = os.Stderr
+// }
 
-func (ah *AdminHandler) ShutdownNode(id string) error {
-	if err := ah.clients[id].Shutdown(context.Background()); err != nil {
-		ah.l.Error(err, "failed to shutdown")
-		return err
-	}
+// func (ah *AdminHandler) ShutdownNode(id string) error {
+// 	if err := ah.clients[id].Shutdown(context.Background()); err != nil {
+// 		ah.l.Error(err, "failed to shutdown")
+// 		return err
+// 	}
 
-	delete(ah.clients, id)
+// 	delete(ah.clients, id)
 
-	nodes := map[string]string{}
-	for k, v := range ah.clients {
-		nodes[k] = v.Addr
-	}
+// 	nodes := map[string]string{}
+// 	for k, v := range ah.clients {
+// 		nodes[k] = v.Addr
+// 	}
 
-	for _, cl := range ah.clients {
-		if err := cl.SetNodes(context.Background(), nodes); err != nil {
-			ah.l.Error(err, "failed to set nodes to server")
-		}
-	}
+// 	for _, cl := range ah.clients {
+// 		if err := cl.SetNodes(context.Background(), nodes); err != nil {
+// 			ah.l.Error(err, "failed to set nodes to server")
+// 		}
+// 	}
 
-	config.RemoveNode(id)
+// 	config.RemoveNode(id)
 
-	return nil
-}
+// 	return nil
+// }

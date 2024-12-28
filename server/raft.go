@@ -10,7 +10,6 @@ import (
 
 	"github.com/eduardoths/tcc-raft/dto"
 	"github.com/eduardoths/tcc-raft/pkg/logger"
-	"github.com/eduardoths/tcc-raft/proto"
 	pb "github.com/eduardoths/tcc-raft/proto"
 	"github.com/eduardoths/tcc-raft/raft"
 	"google.golang.org/grpc"
@@ -158,7 +157,7 @@ func (s *Server) Shutdown(ctx context.Context, _ *pb.Empty) (*pb.Empty, error) {
 
 func (s *Server) GetLeader(ctx context.Context, _ *pb.EmptyDB) (*pb.GetLeaderReply, error) {
 	d, _ := s.raft.GetLeader(ctx)
-	return &proto.GetLeaderReply{
+	return &pb.GetLeaderReply{
 		Id:   d.ID,
 		Term: int32(d.Term),
 	}, nil

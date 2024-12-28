@@ -66,6 +66,13 @@ type DeleteReply struct {
 	Noted bool `json:"noted"`
 }
 
+func DeleteReplyFromProto(proto *pb.DeleteReply) DeleteReply {
+	return DeleteReply{
+		Index: int(proto.GetIndex()),
+		Noted: proto.GetNoted(),
+	}
+}
+
 func (dr DeleteReply) ToProto() *pb.DeleteReply {
 	return &pb.DeleteReply{
 		Index: int32(dr.Index),

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/eduardoths/tcc-raft/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,9 +13,10 @@ type AdminClient struct {
 	client proto.AdminClient
 	conn   *grpc.ClientConn
 	Addr   string
+	log    logger.Logger
 }
 
-func NewAdminClient(addr string) (*AdminClient, error) {
+func NewAdminClient(addr string, log logger.Logger) (*AdminClient, error) {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		return nil, err
@@ -25,6 +27,7 @@ func NewAdminClient(addr string) (*AdminClient, error) {
 		conn:   conn,
 		client: client,
 		Addr:   addr,
+		log:    log,
 	}, nil
 }
 
