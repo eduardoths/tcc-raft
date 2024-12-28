@@ -20,12 +20,13 @@ func (l *logger) Info(msg string, a ...any) {
 }
 
 func (l *logger) Error(err error, msg string, a ...any) {
-	var keysAndValues []interface{}
-	copy(keysAndValues, l.keysAndValues)
+	newKeysAndValues := make([]interface{}, len(l.keysAndValues))
+	copy(newKeysAndValues, l.keysAndValues)
 	if err != nil {
-		keysAndValues = append(keysAndValues, "err", err)
+		newKeysAndValues = append(newKeysAndValues, "err", err)
 	}
-	l.sugar.Errorw(fmt.Sprintf(msg, a...), keysAndValues...)
+
+	l.sugar.Errorw(fmt.Sprintf(msg, a...), newKeysAndValues...)
 }
 
 func (l *logger) Warn(msg string, a ...any) {
@@ -33,12 +34,9 @@ func (l *logger) Warn(msg string, a ...any) {
 }
 
 func (l *logger) With(keysAndValues ...interface{}) Logger {
-	var newKeysAndValues []interface{}
+	newKeysAndValues := make([]interface{}, len(l.keysAndValues))
 	copy(newKeysAndValues, l.keysAndValues)
 
 	newKeysAndValues = append(newKeysAndValues, keysAndValues...)
-	return &logger{
-		sugar:         l.sugar,
-		keysAndValues: newKeysAndValues,
-	}
+	return MakeLogger(newKeysAndValues...)
 }
