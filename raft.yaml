@@ -1,5 +1,5 @@
 raft_cluster:
-  server_count: 1
+  server_count: 3
   servers:
     - id: A
       host: "localhost"
@@ -12,5 +12,5 @@ raft_cluster:
       port: 8082
 
   # Additional Raft configuration
-  election_timeout: 150 # Timeout (ms) for starting an election
-  heartbeat_interval: 50 # Interval (ms) for leader to send heartbeats
+  election_timeout: 1500 # Timeout (ms) for starting an election
+  heartbeat_interval: 150 # Interval (ms) for leader to send heartbeats
