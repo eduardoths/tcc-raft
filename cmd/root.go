@@ -4,6 +4,7 @@ import (
 	balancer "github.com/eduardoths/tcc-raft/cmd/balancer"
 	"github.com/eduardoths/tcc-raft/cmd/node"
 	"github.com/eduardoths/tcc-raft/cmd/orchestrator"
+	restapi "github.com/eduardoths/tcc-raft/cmd/rest-api"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +19,7 @@ func init() {
 		node.NodeCMD,
 		orchestrator.OrchestratorCmd,
 		balancer.BalancerCMD,
+		restapi.RestApiCMD,
 	)
 }
 

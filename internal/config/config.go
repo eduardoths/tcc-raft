@@ -33,9 +33,9 @@ type RaftCluster struct {
 	HeartbeatInterval int      `yaml:"heartbeat_interval" json:"heartbeat_interval"`
 	EnableK8s         bool     `yaml:"enable_k8s" json:"enable_k8s"`
 	BalancerPort      int      `yaml:"balancer_port" json:"balancer_port"`
-	BalancerHost      int      `yaml:"balancer_host" json:"balancer_host"`
+	BalancerHost      string   `yaml:"balancer_host" json:"balancer_host"`
 	RestPort          int      `yaml:"rest_port" json:"rest_port"`
-	RestHost          int      `yaml:"rest_host" json:"rest_host"`
+	RestHost          string   `yaml:"rest_host" json:"rest_host"`
 }
 
 func (rc RaftCluster) NodesStr() string {
@@ -58,6 +58,14 @@ type Config struct {
 	ID          string      `yaml:"-" json:"id"`
 	Port        int         `yaml:"-" json:"port"`
 	Log         logger.Logger
+}
+
+func (c Config) BalancerAddr() string {
+	return fmt.Sprintf("%s:%d", c.RaftCluster.BalancerHost, c.RaftCluster.BalancerPort)
+}
+
+func (c Config) RestAddr() string {
+	return fmt.Sprintf("%s:%d", c.RaftCluster.RestHost, c.RaftCluster.RestPort)
 }
 
 func init() {
@@ -85,6 +93,10 @@ func InitWithCommands(f *Flags, log logger.Logger) {
 	globalConfig.RaftCluster.HeartbeatInterval = f.HeartbeatInterval
 	globalConfig.RaftCluster.EnableK8s = f.EnableK8s
 	globalConfig.RaftCluster.ServerCount = f.ServerCount
+	globalConfig.RaftCluster.BalancerHost = f.BalancerHost
+	globalConfig.RaftCluster.BalancerPort = f.BalancerPort
+	globalConfig.RaftCluster.RestHost = f.RestHost
+	globalConfig.RaftCluster.RestPort = f.RestPort
 
 	for id, addr := range f.Servers {
 		host, port, _ := net.SplitHostPort(addr)

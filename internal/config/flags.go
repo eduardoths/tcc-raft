@@ -11,11 +11,20 @@ type Flags struct {
 	HeartbeatInterval int
 	ServerCount       int
 	EnableK8s         bool
+	BalancerHost      string
+	BalancerPort      int
+	RestHost          string
+	RestPort          int
 	Servers           map[string]string
 }
 
 func InitFlags(cmd *cobra.Command) *Flags {
 	f := new(Flags)
+
+	cmd.Flags().StringVar(&f.BalancerHost, "balancer-host", "", "Balancer host")
+	cmd.Flags().IntVar(&f.BalancerPort, "balancer-port", 0, "Balancer port")
+	cmd.Flags().StringVar(&f.RestHost, "rest-host", "", "Rest host")
+	cmd.Flags().IntVar(&f.RestPort, "rest-port", 0, "Rest port")
 
 	cmd.Flags().StringVar(&f.ID, "id", "", "Unique server ID")
 	cmd.Flags().IntVar(&f.Port, "port", 0, "Port to run the HTTP server on")

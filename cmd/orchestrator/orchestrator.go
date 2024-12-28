@@ -51,6 +51,10 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 			"--heartbeat_interval", fmt.Sprintf("%d", cfg.RaftCluster.HeartbeatInterval),
 			"--server_count", fmt.Sprintf("%d", cfg.RaftCluster.ServerCount),
 			"--servers_map", nodesStr,
+			"--balancer-host", cfg.RaftCluster.BalancerHost,
+			"--balancer-port", fmt.Sprintf("%d", cfg.RaftCluster.BalancerPort),
+			"--rest-host", cfg.RaftCluster.RestHost,
+			"--rest-port", fmt.Sprintf("%d", cfg.RaftCluster.RestPort),
 		)
 		// Forward standard output and error
 		execCmd.Stdout = os.Stdout
@@ -72,6 +76,10 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 		"--heartbeat_interval", fmt.Sprintf("%d", cfg.RaftCluster.HeartbeatInterval),
 		"--server_count", fmt.Sprintf("%d", cfg.RaftCluster.ServerCount),
 		"--servers_map", nodesStr,
+		"--balancer-host", cfg.RaftCluster.BalancerHost,
+		"--balancer-port", fmt.Sprintf("%d", cfg.RaftCluster.BalancerPort),
+		"--rest-host", cfg.RaftCluster.RestHost,
+		"--rest-port", fmt.Sprintf("%d", cfg.RaftCluster.RestPort),
 	)
 	// Forward standard output and error
 	balancerCmd.Stdout = os.Stdout
@@ -92,6 +100,10 @@ func RunOrchestrator(cmd *cobra.Command, args []string) {
 		"--heartbeat_interval", fmt.Sprintf("%d", cfg.RaftCluster.HeartbeatInterval),
 		"--server_count", fmt.Sprintf("%d", cfg.RaftCluster.ServerCount),
 		"--servers_map", nodesStr,
+		"--balancer-host", cfg.RaftCluster.BalancerHost,
+		"--balancer-port", fmt.Sprintf("%d", cfg.RaftCluster.BalancerPort),
+		"--rest-host", cfg.RaftCluster.RestHost,
+		"--rest-port", fmt.Sprintf("%d", cfg.RaftCluster.RestPort),
 	)
 
 	wg.Add(1)
