@@ -16,7 +16,9 @@ import (
 )
 
 type Balancer struct {
-	mu        *sync.Mutex
+	mu    *sync.Mutex
+	idxMu *sync.Mutex
+
 	logger    logger.Logger
 	dbClients map[string]*client.DatabaseClient
 	leaderId  string
@@ -31,6 +33,7 @@ type Balancer struct {
 func NewBalancer(log logger.Logger) *Balancer {
 	balancer := &Balancer{
 		mu:        &sync.Mutex{},
+		idxMu:     &sync.Mutex{},
 		logger:    log.With("where", "balancer"),
 		dbClients: make(map[string]*client.DatabaseClient),
 		ids:       make([]string, 0),
@@ -55,10 +58,13 @@ func NewBalancer(log logger.Logger) *Balancer {
 	return balancer
 }
 
-func (b Balancer) next() (string, *client.DatabaseClient) {
+func (b *Balancer) next() (string, *client.DatabaseClient) {
 	if len(b.ids) == 0 {
 		return "", nil
 	}
+
+	b.idxMu.Lock()
+	defer b.idxMu.Unlock()
 
 	b.idx = (b.idx + 1) % len(b.ids)
 	id := b.ids[b.idx]
@@ -66,7 +72,7 @@ func (b Balancer) next() (string, *client.DatabaseClient) {
 	return id, client
 }
 
-func (b Balancer) getLeader(ctx context.Context) (string, *client.DatabaseClient, error) {
+func (b *Balancer) getLeader(ctx context.Context) (string, *client.DatabaseClient, error) {
 	var respLeader string
 	if b.leaderId == "" {
 		resp, err := b.GetLeader(ctx, &pb.EmptyDB{})
@@ -138,7 +144,7 @@ func (b *Balancer) Delete(ctx context.Context, args *pb.DeleteArgs) (*pb.DeleteR
 	return client.Delete(ctx, args)
 }
 
-func (b Balancer) GetLeader(ctx context.Context, args *pb.EmptyDB) (*pb.GetLeaderReply, error) {
+func (b *Balancer) GetLeader(ctx context.Context, args *pb.EmptyDB) (*pb.GetLeaderReply, error) {
 	_, client := b.next()
 	return client.GetLeader(ctx, args)
 }

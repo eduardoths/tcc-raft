@@ -74,3 +74,7 @@ func (bc *BalancerClient) GetLeader(ctx context.Context) (dto.GetLeaderReply, er
 		Term: int(resp.GetTerm()),
 	}, nil
 }
+
+func (bc *BalancerClient) SetLeader(ctx context.Context, args dto.SetLeader) error {
+	return nil
+}

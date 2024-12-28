@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/eduardoths/tcc-raft/dto"
+	"github.com/eduardoths/tcc-raft/internal/config"
 	"github.com/eduardoths/tcc-raft/pkg/client"
 	"github.com/eduardoths/tcc-raft/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -15,10 +17,20 @@ type DatabaseHandler struct {
 }
 
 func NewDatabaseHandler() *DatabaseHandler {
+	cfg := config.Get()
 	dh := &DatabaseHandler{
 		l: logger.MakeLogger("handler", "database", "server", "balancer"),
 	}
+	balancer, err := client.NewBalancerClient(
+		cfg.BalancerAddr(),
+		dh.l.With("to-server", "balancer"),
+	)
+	if err != nil {
+		dh.l.Error(err, "failed to set up balancer client")
+		os.Exit(1)
+	}
 
+	dh.balancer = balancer
 	return dh
 }
 
